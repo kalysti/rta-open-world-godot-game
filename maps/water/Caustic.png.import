@@ -1,0 +1,24 @@
+[remap]
+
+importer="texture_array"
+type="TextureArray"
+path="res://.import/Caustic.png-d2dc4fc5a3ea4a8d5958480867e94914.texarr"
+metadata={
+"vram_texture": false
+}
+
+[deps]
+
+source_file="res://maps/water/Caustic.png"
+dest_files=[ "res://.import/Caustic.png-d2dc4fc5a3ea4a8d5958480867e94914.texarr" ]
+
+[params]
+
+compress/mode=0
+compress/no_bptc_if_rgb=false
+flags/repeat=1
+flags/filter=true
+flags/mipmaps=true
+flags/srgb=2
+slices/horizontal=4
+slices/vertical=4

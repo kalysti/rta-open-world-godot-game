@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/tires.wav-32e79f5b4c815d9eeefb4f5a54a0d09a.sample"
+
+[deps]
+
+source_file="res://vehicles/nissan_gt-r_2008_red/audio/tires.wav"
+dest_files=[ "res://.import/tires.wav-32e79f5b4c815d9eeefb4f5a54a0d09a.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0

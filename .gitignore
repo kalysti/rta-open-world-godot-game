@@ -1,0 +1,11 @@
+# Import cache
+.import/
+.vs/
+.mono/
+# Binaries
+bin/
+build/
+level/
+lib/
+
+.readthedocs.yml

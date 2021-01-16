@@ -1,0 +1,649 @@
+using Godot;
+using System;
+using UI.Menu;
+
+public class character : KinematicBody, IMenuInterface
+{
+
+    public UICoreMenu menu { get; set; }
+
+    [Export]
+    public NodePath cameraPath;
+    [Export]
+    public NodePath skeletonPath;
+    [Export]
+    public NodePath animationTreePath;
+    [Export]
+    public NodePath shapePath;
+
+    [Export]
+    public NodePath crosshairPath;
+
+    [Export]
+    public NodePath rayGroundPath;
+    [Export]
+    public NodePath rayVehiclePash;
+    [Export]
+    public NodePath rayDragPath;
+
+    [Export]
+    public NodePath footstepPath;
+    [Export]
+    public NodePath targetPath;
+
+    [Export]
+    public NodePath charPath;
+
+    private Transform origCameraTransform;
+
+
+    [Export]
+    public NodePath cameraBasePath;
+
+    private nissan vehicle { get; set; }
+
+
+    public AnimationTree animTree { get; set; }
+    public AudioStreamPlayer3D footstep { get; set; }
+
+    public AnimationNodeStateMachinePlayback animation_state_machine { get; set; }
+    public RayCast rayGround { get; set; }
+    public RayCast rayDrag { get; set; }
+    public RayCast rayVehicle { get; set; }
+
+    //public Level level { get; set; }
+
+    public ClippedCamera camera { get; set; }
+
+    //private spawner spow = new spawner();
+
+    public Spatial target { get; set; }
+    public Spatial cameraBase { get; set; }
+    public Control crosshair { get; set; }
+    public CollisionShape shape { get; set; }
+    public Skeleton skeleton { get; set; }
+    public Spatial charFolder { get; set; }
+
+    const float jumpForce = 10.0f;
+    float fov_initial = 0f;
+    const float MOTION_INTERPOLATE_SPEED = 15.0f;
+    const float CAMERA_ROTATION_SPEED = 0.001f;
+    const float CAMERA_X_ROT_MIN = -80;
+    const float CAMERA_X_ROT_MAX = 80;
+    const float footsteep_speed = 0.5f;
+
+    private float footsteep_timer = 0.0f;
+    const float MIN_AIRBORNE_TIME = 0.1f;
+    const float JUMP_SPEED = 10.0f;
+    const float MAX_SPRINT_SPEED = 6.0f;
+    const float MAX_SPEED = 2.0f;
+
+    const float ACCEL = 5.0f;
+
+    const float DEACCEL = 5.0f;
+    const float AIR_DEACCEL = 1.0f;
+    const float SPRINT_ACCEL = 10.0f;
+
+
+    const float GRAB_DISTANCE = 50f;
+    const float THROW_FORCE = 100f;
+
+
+    public const float MAX_SLOPE_ANGLE = 40.0f;
+
+    private Vector3 velocity = Vector3.Zero;
+    private Vector3 hvelocity = Vector3.Zero;
+
+    //private spawn_object moveObj = null;
+    private Vector2 motion = Vector2.Zero;
+    private float airborne_time = 100f;
+    private Transform orientation = new Transform();
+    private Transform root_motion = new Transform();
+    private Transform shape_orientation = new Transform();
+
+    private Vector3 direction = Vector3.Zero;
+    private Vector3 camera_target_initial = Vector3.Zero;
+
+    private bool is_sprinting = false;
+    private bool is_grounded = false;
+    private bool is_aiming = false;
+    private bool is_climbing = false;
+    private bool weapon_equipped = false;
+    private bool is_in_vehicle = false;
+
+
+    private float camera_x_rot = 0.0f;
+    private float camera_y_rot = 0.0f;
+
+    private bool objectToDestroy = false;
+
+
+    private const float GRAVITY = -24.8f;
+
+    private Godot.Collections.Array<AudioStreamSample> footstepList = new Godot.Collections.Array<AudioStreamSample>();
+
+    public void Teleport(Vector3 pos)
+    {
+        var gb = GlobalTransform;
+        gb.origin = pos;
+        GlobalTransform = gb;
+
+        shape_orientation = shape.GlobalTransform;
+        camera_target_initial = target.Transform.origin;
+    }
+
+
+    private void loadFootsteps()
+    {
+        var concrete_1 = ResourceLoader.Load("res://character/audio/footsteps/concrete_1.wav") as AudioStreamSample;
+        var concrete_2 = ResourceLoader.Load("res://character/audio/footsteps/concrete_2.wav") as AudioStreamSample;
+        var concrete_3 = ResourceLoader.Load("res://character/audio/footsteps/concrete_3.wav") as AudioStreamSample;
+        var concrete_4 = ResourceLoader.Load("res://character/audio/footsteps/concrete_4.wav") as AudioStreamSample;
+        var concrete_5 = ResourceLoader.Load("res://character/audio/footsteps/concrete_5.wav") as AudioStreamSample;
+        var concrete_6 = ResourceLoader.Load("res://character/audio/footsteps/concrete_6.wav") as AudioStreamSample;
+        var concrete_7 = ResourceLoader.Load("res://character/audio/footsteps/concrete_7.wav") as AudioStreamSample;
+
+        footstepList.Add(concrete_1);
+        footstepList.Add(concrete_2);
+        footstepList.Add(concrete_3);
+        footstepList.Add(concrete_4);
+        footstepList.Add(concrete_5);
+        footstepList.Add(concrete_6);
+        footstepList.Add(concrete_7);
+    }
+
+    // Declare member variables here. Examples:
+    // private int a = 2;
+    // private string b = "text";
+
+    // Called when the node enters the scene tree for the first time.
+
+    public void on_enter_car_pressed(Node test = null)
+    {
+        enterVehicle();
+
+    }
+    public override void _Ready()
+    {
+        menu = new UICoreMenu();
+        menu.Add("enter_car", "Einsteigen", typeof(VehicleBody), null, true);
+
+        (GetNode("hud").GetNode("menu_popup") as WindowDialog).Connect("popup_hide", this, "on_menu_close");
+
+        loadFootsteps();
+        target = (Spatial)GetNode(targetPath);
+        skeleton = (Skeleton)GetNode(skeletonPath);
+        shape = (CollisionShape)GetNode(shapePath);
+        crosshair = (Control)GetNode(crosshairPath);
+        animTree = (AnimationTree)GetNode(animationTreePath);
+
+        footstep = (AudioStreamPlayer3D)GetNode(footstepPath);
+
+        rayDrag = (RayCast)GetNode(rayDragPath);
+        rayVehicle = (RayCast)GetNode(rayVehiclePash);
+        animation_state_machine = (AnimationNodeStateMachinePlayback)animTree.Get("parameters/playback");
+
+        //     animPlayer.Play("walk");
+
+        crosshair.Visible = true;
+
+
+        charFolder = (Spatial)GetNode(charPath);
+        rayGround = (RayCast)GetNode(rayGroundPath);
+        camera = (ClippedCamera)GetNode(cameraPath);
+        cameraBase = (Spatial)GetNode(cameraBasePath);
+        shape_orientation = shape.GlobalTransform;
+        camera_target_initial = target.Transform.origin;
+        origCameraTransform = camera.Transform;
+
+        fov_initial = camera.Fov;
+
+        TakeOnClothes("body");
+        TakeOnClothes("eyes");
+
+        Input.SetMouseMode(Input.MouseMode.Captured);
+
+        //start spawn
+       // System.Threading.Thread thread = new System.Threading.Thread(() => spow.LoadObjects(GetTree().Root.GetNode("level").GetNode("properties"), GlobalTransform.origin));
+       // thread.Start();
+
+        //spwan timer
+        var timer = (GetNode("object_timer") as Timer);
+        timer.Start();
+    }
+
+    public void on_enter_car(Node target)
+    {
+
+    }
+
+    private void TakeOnClothes(string cloth)
+    {
+        var take_cloth = skeleton.GetChildren();
+        foreach (MeshInstance i in take_cloth)
+        {
+            if (cloth == i.Name)
+                return;
+        }
+
+        var clothes = (PackedScene)ResourceLoader.Load("res://char_edit/meshs/" + cloth + ".tscn");
+        MeshInstance newMesh = (MeshInstance)clothes.Instance();
+        skeleton.AddChild(newMesh);
+        GenerateMesh(newMesh);
+
+    }
+    private void SaveMesh(MeshInstance mesh_inst, Godot.Collections.Array vertex_arr)
+    {
+
+    }
+
+    private void ResetMesh(MeshInstance mesh_inst)
+    {
+    }
+
+
+    private void GenerateMesh(MeshInstance mesh_inst)
+    {
+
+    }
+
+
+    //  // Called every frame. 'delta' is the elapsed time since the previous frame.
+    public override void _PhysicsProcess(float delta)
+    {
+        ProcessInput(delta);
+        if (!is_in_vehicle)
+        {
+            ProcessMovement(delta);
+        }
+
+        ProcessAnimation(delta);
+    }
+
+    public override void _Input(InputEvent @event)
+    {
+        base._Input(@event);
+
+        if (@event is InputEventMouseMotion && Input.GetMouseMode() == Input.MouseMode.Captured)
+        {
+            var mot = @event as InputEventMouseMotion;
+            cameraBase.RotateY(-mot.Relative.x * CAMERA_ROTATION_SPEED);
+            cameraBase.Orthonormalize();
+
+            camera_x_rot = Mathf.Clamp(camera_x_rot + mot.Relative.y * CAMERA_ROTATION_SPEED, Mathf.Deg2Rad(CAMERA_X_ROT_MIN), Mathf.Deg2Rad(CAMERA_X_ROT_MAX));
+            camera_y_rot = Mathf.Clamp(camera_y_rot + mot.Relative.x * CAMERA_ROTATION_SPEED, Mathf.Deg2Rad(CAMERA_X_ROT_MIN), Mathf.Deg2Rad(CAMERA_X_ROT_MAX));
+            var newRot = (cameraBase.FindNode("rotation") as Spatial).Rotation;
+            newRot.x = camera_x_rot;
+
+            (cameraBase.FindNode("rotation") as Spatial).Rotation = newRot;
+
+        }
+    }
+    private void ProcessMovement(float delta)
+    {
+        if (rayGround.IsColliding() == true)
+        {
+            is_grounded = true;
+        }
+        else
+            is_grounded = false;
+
+
+        direction.y = 0;
+        direction = direction.Normalized();
+
+        velocity.y += delta * GRAVITY;
+
+        hvelocity = velocity;
+        hvelocity.y = 0;
+
+        var target = direction;
+        if (is_sprinting)
+            target *= MAX_SPRINT_SPEED;
+        else
+            target *= MAX_SPEED;
+
+        var accel = 0.0f;
+        if (direction.Dot(hvelocity) > 0)
+        {
+            if (is_sprinting)
+                accel = SPRINT_ACCEL;
+            else
+                accel = ACCEL;
+        }
+        else
+        {
+            if (is_grounded)
+                accel = DEACCEL;
+            else
+                accel = AIR_DEACCEL;
+        }
+
+        hvelocity = hvelocity.LinearInterpolate(target, accel * delta);
+        velocity.x = hvelocity.x;
+        velocity.z = hvelocity.z;
+
+        velocity = MoveAndSlide(velocity, Vector3.Up, false, 4, Mathf.Deg2Rad(MAX_SLOPE_ANGLE), false);
+
+        //face moving dir
+        if (direction.Dot(hvelocity) > 0)
+        {
+            var quat_from = new Quat(shape_orientation.basis);
+            var tf = new Transform();
+            var quat_to = new Quat(tf.LookingAt(-direction, Vector3.Up).basis);
+
+            shape_orientation.basis = new Basis(quat_from.Slerp(quat_to, delta * 10f));
+
+            var srp = shape.Rotation;
+            srp.y = shape_orientation.basis.GetEuler().y;
+            shape.Rotation = srp;
+        }
+
+    }
+
+    private void showSystemStats()
+    {
+        (GetNode("hud/system_stats/fps_counter") as Label).Text = "FPS: " + Engine.GetFramesPerSecond();
+      //  (GetNode("hud/system_stats/objects") as Label).Text = "Objects: " +  GetTree().Root.GetNode("level").GetNode("properties").GetChildCount()  + "/" + spow.TotalObjects();
+        (GetNode("hud/system_stats/memory") as Label).Text = "Memory: " + OS.GetStaticMemoryUsage() / 1024 / 1024 + " MB";
+        (GetNode("hud/system_stats/video_memory") as Label).Text = "VRAM: " + (Performance.GetMonitor(Performance.Monitor.RenderVideoMemUsed) / 1024 / 1024 ) .ToString()+ " MB";
+    }
+    public override void _Process(float delta)
+    {
+        showSystemStats();
+        if (footsteep_timer <= 0)
+        {
+            if (IsOnFloor() && direction.Dot(hvelocity) > 0)
+            {
+                //footstep.UnitSize = velocity.Length();
+                var randGen = new RandomNumberGenerator();
+
+                footstep.Stream = footstepList[randGen.RandiRange(0, footstepList.Count - 1)];
+                footstep.Play();
+                footsteep_timer = 1f - (0.3f * hvelocity.Length());
+
+                randGen.Randomize();
+                return;
+            }
+        }
+        else
+            footsteep_timer -= delta;
+    }
+
+    private void ProcessAnimation(float delta)
+    {
+        //blend
+        animTree.Set("parameters/blend_tree/locomotion/idle_walk_run/blend_position", hvelocity.Length());
+
+        if (is_in_vehicle)
+        {
+            animation_state_machine.Travel("drive");
+        }
+        else if (!is_grounded && !IsOnFloor())
+            animation_state_machine.Travel("fall");
+        else
+        {
+            if (is_climbing)
+                animation_state_machine.Travel("climb");
+            else
+                animation_state_machine.Travel("blend_tree");
+        }
+
+    }
+
+    public void on_menu_close()
+    {
+        GD.Print("menu closed");
+        Input.SetMouseMode(Input.MouseMode.Captured);
+    }
+    private void ProcessInput(float delta)
+    {
+
+
+        //cursor
+        if (Input.IsActionJustPressed("ui_cancel"))
+        {
+            if (Input.GetMouseMode() == Input.MouseMode.Visible)
+                Input.SetMouseMode(Input.MouseMode.Captured);
+
+            else
+                Input.SetMouseMode(Input.MouseMode.Visible);
+        }
+
+
+        direction = Vector3.Zero;
+        var cam_xform = camera.GlobalTransform;
+        var input_movement_vector = Vector2.Zero;
+
+        if (Input.IsActionPressed("move_forward") && Input.GetMouseMode() != Input.MouseMode.Visible)
+            input_movement_vector.y += 1;
+        if (Input.IsActionPressed("move_backward") && Input.GetMouseMode() != Input.MouseMode.Visible)
+            input_movement_vector.y -= 1;
+        if (Input.IsActionPressed("move_left") && Input.GetMouseMode() != Input.MouseMode.Visible)
+            input_movement_vector.x -= 1;
+        if (Input.IsActionPressed("move_right") && Input.GetMouseMode() != Input.MouseMode.Visible)
+            input_movement_vector.x += 1;
+
+        if (Input.IsActionJustPressed("spawn_object") && Input.GetMouseMode() != Input.MouseMode.Visible)
+            spawnObject();
+        if (Input.IsActionJustReleased("spawn_object") && Input.GetMouseMode() != Input.MouseMode.Visible)
+            endObject();
+        if (Input.IsActionPressed("spawn_object") && Input.GetMouseMode() != Input.MouseMode.Visible)
+            moveObject();
+
+       // if (Input.IsActionJustReleased("save_objects") && Input.GetMouseMode() != Input.MouseMode.Visible)
+            //spow.SaveObjects(GetTree().Root.GetNode("level").GetNode("properties"));
+
+        if (Input.IsActionJustPressed("enter_menu") && Input.GetMouseMode() != Input.MouseMode.Visible)
+        {
+            var coll = rayVehicle.GetCollider();
+            if (coll != null)
+                menu.Open(GetNode("hud").GetNode("menu_popup") as WindowDialog, this, rayVehicle.GetCollider() as Node);
+            else
+                menu.Open(GetNode("hud").GetNode("menu_popup") as WindowDialog, this, null);
+        }
+
+
+        input_movement_vector = input_movement_vector.Normalized();
+
+        direction += -cam_xform.basis.z * input_movement_vector.y;
+        direction += cam_xform.basis.x * input_movement_vector.x;
+
+        //sprint
+        if (Input.IsActionPressed("move_sprint"))
+            is_sprinting = true;
+        else
+            is_sprinting = false;
+
+        //jump
+        if (is_grounded && Input.IsActionPressed("move_jump"))
+        {
+            velocity.y = JUMP_SPEED;
+        }
+
+        //aiming
+        var camera_target = camera_target_initial;
+        var fov = fov_initial;
+        var crosshair_alpha = 0.0f;
+
+        if (Input.IsActionPressed("rmb") || Input.IsActionPressed("spawn_object"))
+        {
+            camera_target.x = -1.25f;
+            crosshair_alpha = 1.0f;
+            fov = 60;
+            is_aiming = true;
+        }
+
+        if (Input.IsActionJustReleased("rmb"))
+        {
+            is_aiming = false;
+        }
+
+        var crmod = crosshair.Modulate;
+        crmod.a += (crosshair_alpha - crosshair.Modulate.a) * 0.15f;
+        crosshair.Modulate = crmod;
+
+        var tf = target.Transform;
+        tf.origin.x += (camera_target.x - target.Transform.origin.x) * 0.15f;
+        target.Transform = tf;
+        camera.Fov += (fov - camera.Fov) * 0.15f;
+
+        // Force
+        if (is_aiming && !weapon_equipped)
+        {
+            var space_state = GetWorld().DirectSpaceState;
+            var center_position = GetViewport().Size / 2;
+            var ray_from = camera.ProjectRayOrigin(center_position);
+            var ray_to = ray_from + camera.ProjectRayNormal(center_position) * GRAB_DISTANCE;
+
+            var arr = new Godot.Collections.Array();
+            arr.Add(this);
+
+            Godot.Collections.Dictionary ray_result = space_state.IntersectRay(ray_from, ray_to, arr);
+            if (ray_result != null && ray_result.Contains("collider"))
+            {
+                var body = ray_result["collider"];
+                if (body is RigidBody)
+                {
+                    if (Input.IsActionJustPressed("lmb") && is_grounded)
+                    {
+                        (body as RigidBody).ApplyImpulse(new Vector3(0, 0, 0), -camera.GlobalTransform.basis.z.Normalized() * THROW_FORCE);
+                    }
+                }
+            }
+        }
+    }
+
+    private void endObject()
+    {
+        /*
+        if (moveObj != null)
+        {
+            if (!objectToDestroy)
+            {
+                GD.Print("finish object");
+
+               // System.Threading.Thread thread = new System.Threading.Thread(() => spow.FinishObject(moveObj));
+             //   thread.Start();
+
+            }
+            else
+            {
+                GetTree().Root.GetNode("level").GetNode("properties").RemoveChild(moveObj);
+            }
+        }
+        */
+    }
+    private void spawnObject()
+    {
+        GD.Print("spawn");
+        objectToDestroy = false;
+      //  moveObj = spow.CreateObject(GetTree().Root.GetNode("level").GetNode("properties"), true, "tree", Vector3.Zero);
+    }
+    private void _on_object_timer_timeout()
+    {
+      //  System.Threading.Thread thread = new System.Threading.Thread(() => spow.HandleObjects(GetTree().Root.GetNode("level").GetNode("properties"), GlobalTransform.origin));
+      //  thread.Start();
+    }
+    private void enterVehicle()
+    {
+        if (!is_in_vehicle)
+        {
+            if (rayVehicle.IsColliding())
+            {
+                if (rayVehicle.GetCollider() != null && rayVehicle.GetCollider() is nissan)
+                {
+                    var orig = camera.Translation;
+                    //orig.z -= 0.5f;
+                    orig.z -= 2.9f;
+                    orig.x = -0.3f;
+
+                    camera.Translation = orig;
+                    vehicle = rayVehicle.GetCollider() as nissan;
+
+                    GetParent().RemoveChild(this);
+                    vehicle.AddChild(this);
+
+                    shape.Disabled = true;
+                    var gt = GlobalTransform;
+
+                    if (vehicle.driver == null)
+                        gt.origin = (vehicle.GetNode("car").GetNode("points").GetNode("driver_inside") as Position3D).GlobalTransform.origin;
+                    else
+                        gt.origin = (vehicle.GetNode("car").GetNode("points").GetNode("subdriver_inside") as Position3D).GlobalTransform.origin;
+
+                    //change position for sit down
+                    gt.origin.y -= 0.5f;
+
+
+                    GlobalTransform = gt;
+                    vehicle.driver = this;
+
+                    var rot = shape.Rotation;
+                    rot.y = (vehicle.GetNode("car") as Spatial).Transform.basis.GetEuler().y;
+                    rot.x = Mathf.Deg2Rad(-110f);
+
+                    shape.Rotation = rot;
+
+                    is_in_vehicle = true;
+                    camera.ClipToBodies = false;
+                }
+            }
+        }
+        else
+        {
+            GetParent().RemoveChild(this);
+            //level.GetNode("clients").AddChild(this);
+
+            shape.Disabled = false;
+            camera.Transform = origCameraTransform;
+
+            var gt = GlobalTransform;
+            gt.origin = (vehicle.GetNode("car").GetNode("points").GetNode("driver_outside") as Position3D).GlobalTransform.origin;
+            GlobalTransform = gt;
+
+            var rot = shape.Rotation;
+            rot.y = vehicle.Transform.basis.GetEuler().y;
+            rot.x = Mathf.Deg2Rad(-90f);
+
+            shape.Rotation = rot;
+
+            velocity = vehicle.LinearVelocity * 1.5f;
+
+            vehicle.driver = null;
+            vehicle = null;
+            is_in_vehicle = false;
+            camera.ClipToBodies = true;
+        }
+    }
+    private void moveObject()
+    {
+        /*
+        if (rayDrag.IsColliding() && moveObj != null)
+        {
+            moveObj.Visible = true;
+            var raycast_result = rayDrag.GetCollider();
+
+            if (raycast_result is StaticBody)
+            {
+                //spow.MoveObject(moveObj, rayDrag.GetCollisionPoint());
+                objectToDestroy = false;
+            }
+            else
+            {
+                moveObj.Visible = false;
+                objectToDestroy = true;
+            }
+        }
+        else if (moveObj != null)
+        {
+            moveObj.Visible = false;
+            objectToDestroy = true;
+        }
+
+        */
+
+    }
+
+}
+

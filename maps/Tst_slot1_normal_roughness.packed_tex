@@ -1,0 +1,8 @@
+{
+	"contains_albedo": false,
+	"resolution": 1024,
+	"src": {
+		"a": "res://maps/textures/ground_text/beach/Ground035_2K_Roughness.png",
+		"rgb": "res://maps/textures/ground_text/beach/Ground035_2K_Normal.png"
+	}
+}

@@ -1,0 +1,36 @@
+[remap]
+
+importer="texture"
+type="StreamTexture"
+path.s3tc="res://.import/RedightGlass_normal.png-041ff1fe382843d082c42f253cffb6a3.s3tc.stex"
+path.etc2="res://.import/RedightGlass_normal.png-041ff1fe382843d082c42f253cffb6a3.etc2.stex"
+metadata={
+"imported_formats": [ "s3tc", "etc2" ],
+"vram_texture": true
+}
+
+[deps]
+
+source_file="res://vehicles/nissan_gt-r_2008_red/textures/RedightGlass_normal.png"
+dest_files=[ "res://.import/RedightGlass_normal.png-041ff1fe382843d082c42f253cffb6a3.s3tc.stex", "res://.import/RedightGlass_normal.png-041ff1fe382843d082c42f253cffb6a3.etc2.stex" ]
+
+[params]
+
+compress/mode=2
+compress/lossy_quality=0.7
+compress/hdr_mode=0
+compress/bptc_ldr=0
+compress/normal_map=1
+flags/repeat=true
+flags/filter=true
+flags/mipmaps=true
+flags/anisotropic=false
+flags/srgb=2
+process/fix_alpha_border=true
+process/premult_alpha=false
+process/HDR_as_SRGB=false
+process/invert_color=false
+stream=false
+size_limit=0
+detect_3d=false
+svg/scale=1.0

@@ -1,0 +1,19 @@
+[remap]
+
+importer="wavefront_obj"
+type="Mesh"
+path="res://.import/sea_mesh.obj-c00af5873502f6ed06057bf691ee2a7d.mesh"
+
+[deps]
+
+files=[ "res://.import/sea_mesh.obj-c00af5873502f6ed06057bf691ee2a7d.mesh" ]
+
+source_file="res://maps/sea_mesh.obj"
+dest_files=[ "res://.import/sea_mesh.obj-c00af5873502f6ed06057bf691ee2a7d.mesh", "res://.import/sea_mesh.obj-c00af5873502f6ed06057bf691ee2a7d.mesh" ]
+
+[params]
+
+generate_tangents=true
+scale_mesh=Vector3( 1, 1, 1 )
+offset_mesh=Vector3( 0, 0, 0 )
+optimize_mesh=true

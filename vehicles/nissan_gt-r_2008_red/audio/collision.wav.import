@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/collision.wav-90a5564a6e258eeda1702d0b4a44a512.sample"
+
+[deps]
+
+source_file="res://vehicles/nissan_gt-r_2008_red/audio/collision.wav"
+dest_files=[ "res://.import/collision.wav-90a5564a6e258eeda1702d0b4a44a512.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0

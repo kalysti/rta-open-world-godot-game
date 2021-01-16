@@ -1,0 +1,19 @@
+[remap]
+
+importer="wavefront_obj"
+type="Mesh"
+path="res://.import/free grass by adam127.obj-a010be1e3b55b1c7670c983592c17aed.mesh"
+
+[deps]
+
+files=[ "res://.import/free grass by adam127.obj-a010be1e3b55b1c7670c983592c17aed.mesh" ]
+
+source_file="res://maps/materials/free grass by adam127.obj"
+dest_files=[ "res://.import/free grass by adam127.obj-a010be1e3b55b1c7670c983592c17aed.mesh", "res://.import/free grass by adam127.obj-a010be1e3b55b1c7670c983592c17aed.mesh" ]
+
+[params]
+
+generate_tangents=true
+scale_mesh=Vector3( 1, 1, 1 )
+offset_mesh=Vector3( 0, 0, 0 )
+optimize_mesh=true

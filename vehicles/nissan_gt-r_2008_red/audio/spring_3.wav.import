@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/spring_3.wav-f16ee2d52a4ea26754703662c7c949af.sample"
+
+[deps]
+
+source_file="res://vehicles/nissan_gt-r_2008_red/audio/spring_3.wav"
+dest_files=[ "res://.import/spring_3.wav-f16ee2d52a4ea26754703662c7c949af.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0
