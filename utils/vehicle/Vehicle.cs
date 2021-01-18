@@ -50,6 +50,7 @@ namespace Game
         private float current_speed_mps = 0.0f;
         private Vector3 prev_pos = Vector3.Zero;
 
+
         Godot.Collections.Array<AudioStreamSample> spring_sound = new Godot.Collections.Array<AudioStreamSample>();
         Godot.Collections.Array<AudioStreamSample> collision_sound = new Godot.Collections.Array<AudioStreamSample>();
 
@@ -80,10 +81,9 @@ namespace Game
             InitWheel("FR");
             InitWheel("BL");
             InitWheel("BR");
-
-
-
         }
+
+
 
 
         private void InitWheel(string name)
@@ -95,11 +95,9 @@ namespace Game
             fl_wheel.skid = fl_wheel.node.GetNode("skid") as AudioStreamPlayer3D;
             wheels.Add(name, fl_wheel);
         }
-  
+
         public override void _PhysicsProcess(float delta)
         {
-
-            return;
 
             if (driver != null)
                 ProcessInput(delta);
@@ -109,8 +107,33 @@ namespace Game
             ProcessSound();
         }
 
+
+        public override void _IntegrateForces(PhysicsDirectBodyState state)
+        {
+            if (driver != null)
+            {
+                var charOffset = new Vector3(0, 0.5f, 0);
+                var chair = GetNode("car/points/driver_inside") as Position3D;
+                driver.SetPlayerPosition(chair.GlobalTransform.origin - charOffset);
+
+                /** TODO: ADD ROTATION FOR CAR DRIVING */
+                driver.shape.RotationDegrees = RotationDegrees - (new Vector3(-90, 0, 0));
+            }
+        }
+
+        public Vector3 GetVehiclePosition()
+        {
+            return GlobalTransform.origin;
+        }
+
+        public Vector3 GetVEhicleRotation()
+        {
+            return RotationDegrees;
+        }
+
         private void ProcessInput(float delta)
         {
+            var gt = GlobalTransform;
 
 
 
@@ -119,8 +142,6 @@ namespace Game
 
             if (engineStarted)
             {
-
-
                 steer_val = steering_mult * Input.GetJoyAxis(0, (int)joy_steering);
                 brake_val = brake_mult * Input.GetJoyAxis(0, (int)joy_brake);
 
@@ -167,6 +188,7 @@ namespace Game
                 current_speed_mps = (Translation - prev_pos).Length() / delta;
                 throttle_val += (throttle_val_target - throttle_val) * 10 * delta;
                 var rand = new RandomNumberGenerator();
+
                 //wheels
                 foreach (var wl in wheels.Values)
                 {
@@ -230,6 +252,7 @@ namespace Game
 
 
                 ShiftGears();
+
             }
             else
             {

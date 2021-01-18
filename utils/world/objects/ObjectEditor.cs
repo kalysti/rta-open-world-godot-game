@@ -141,7 +141,7 @@ namespace Game
                 var spat = (Vehicle)nodeScene.Instance();
                 spat.Name = "vehicle_holder";
                 spat.GravityScale = 0;
-                
+
                 FindNode("car_camera_viewport").CallDeferred("add_child", spat);
             }
 
@@ -207,11 +207,58 @@ namespace Game
                 }
             };
 
+            objectLoaded = false;
+
             newWorldObject.Name = "temp_object";
             saveObject = false;
+            newWorldObject.Connect("objectCreated", this, "CreateException");
             world.AddChild(newWorldObject);
             newWorldObject.LoadObjectByFilePath();
 
+        }
+        private bool objectLoaded = false;
+        private void CreateException()
+        {
+            if (newWorldObject != null)
+            {
+                AddException(newWorldObject);
+                objectLoaded = true;
+            }
+        }
+
+        private void AddException(Node newWorldObject)
+        {
+            foreach (var child in newWorldObject.GetChildren())
+            {
+                if (child is Node)
+                {
+                    var node = child as Node;
+                    player.rayDrag.AddException(node);
+
+                    if (node.GetChildCount() > 0)
+                    {
+                        AddException(node);
+                    }
+                }
+            }
+        }
+
+        private void ClearException(Node newWorldObject)
+        {
+            foreach (var child in newWorldObject.GetChildren())
+            {
+                if (child is Node)
+                {
+                    var node = child as Node;
+
+                    player.rayDrag.RemoveException(node);
+
+                    if (node.GetChildCount() > 0)
+                    {
+                        ClearException(node);
+                    }
+                }
+            }
         }
 
         public void Show()
@@ -291,9 +338,11 @@ namespace Game
 
             newWorldObject.Name = "temp_object";
             saveObject = false;
+            newWorldObject.Connect("objectCreated", this, "CreateException");
             world.AddChild(newWorldObject);
-            newWorldObject.LoadObjectByFilePath();
 
+            newWorldObject.LoadObjectByFilePath();
+            AddException(newWorldObject);
         }
         public override void _Input(InputEvent @event)
         {
@@ -330,6 +379,7 @@ namespace Game
                 newWorldObject.QueueFree();
             }
 
+            ClearException(newWorldObject);
             newWorldObject = null;
             saveObject = false;
             player.onFocusing = false;
@@ -361,31 +411,28 @@ namespace Game
         {
             player.onFocusing = true;
 
-            if (player.rayDrag.IsColliding())
+            if (player.rayDrag.IsColliding() && objectLoaded)
             {
-                newWorldObject.Visible = true;
                 var raycast_result = player.rayDrag.GetCollider();
-
-                if (raycast_result is Spatial && (raycast_result as Spatial).Name == "terrain")
+                if (raycast_result != newWorldObject)
                 {
-                    var gt = newWorldObject.GlobalTransform;
-                    gt.origin = player.rayDrag.GetCollisionPoint();
-                    newWorldObject.GlobalTransform = gt;
-                    newWorldObject.Visible = true;
+                    if ((raycast_result is Spatial && (raycast_result as Spatial).Name == "terrain") || raycast_result is StaticBody)
+                    {
+                        var gt = newWorldObject.GlobalTransform;
+                        gt.origin = player.rayDrag.GetCollisionPoint();
+                        newWorldObject.GlobalTransform = gt;
+                        newWorldObject.Visible = true;
 
-                    saveObject = true;
+                        saveObject = true;
+
+                        return;
+                    }
                 }
-                else
-                {
-                    newWorldObject.Visible = false;
-                    saveObject = false;
-                }
+
             }
-            else
-            {
-                newWorldObject.Visible = false;
-                saveObject = false;
-            }
+
+            newWorldObject.Visible = false;
+            saveObject = false;
         }
 
     }

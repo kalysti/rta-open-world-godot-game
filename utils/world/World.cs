@@ -34,6 +34,7 @@ namespace Game
             player.SetPlayerRotation(spawnRot);
 
             spawner.setInit(true);
+            spawner.SetPlayer(player);
         }
 
         public void CreatePuppet(int networkId, uint timestamp, Vector3 pos, Vector3 rot, bool inputEnabled = true)

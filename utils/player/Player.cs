@@ -17,6 +17,8 @@ namespace Game
 
         public bool inputEnabled = true;
 
+        public Vehicle vehicle = null;
+
         [Export]
         public float InputPredictionMaxSize = 0.1f;
 
@@ -100,6 +102,15 @@ namespace Game
 
         public override void _PhysicsProcess(float delta)
         {
+            //in case of driving, dont do anything
+            if (playerState.inVehicle)
+            {
+                sendList.Clear();
+                inputQueue.Clear();
+
+                return;
+            }
+
             //process input
             inputQueue.Enqueue(GetInput(delta));
 
@@ -110,6 +121,7 @@ namespace Game
                 if (newInput != null)
                 {
                     lastInput = ProcessInput(newInput, lastInput, delta);
+
                     character.ProcessAnimation(playerState, newInput, delta);
                 }
             }
@@ -170,9 +182,9 @@ namespace Game
         [Puppet]
         public void OnServerSnapshot(string correctedSnapshotJson)
         {
-
+            return;
             networkStats.AddInPackage(correctedSnapshotJson);
-            
+
             if (reProcess == true || !posCorrection)
                 return;
 
@@ -273,6 +285,11 @@ namespace Game
                 objectEditor.Show();
             }
 
+            if (Input.IsActionJustReleased("enter_menu") && Input.GetMouseMode() != Input.MouseMode.Visible)
+            {
+                enterVehicle();
+            }
+
             movementInput.movement_direction = movementInput.movement_direction.Normalized();
 
             movementInput.cam_direction += -cam_xform.basis.z * movementInput.movement_direction.y;
@@ -354,6 +371,61 @@ namespace Game
             }
 
             return movementInput;
+        }
+        private void enterVehicle()
+        {
+            if (!playerState.inVehicle)
+            {
+                GD.Print("start enter vehicle");
+                if (rayDrag.IsColliding())
+                {
+                    if (rayDrag.GetCollider() != null && rayDrag.GetCollider() is Vehicle)
+                    {
+                        GD.Print("found vehicle");
+
+                        var orig = camera.Translation;
+                        //orig.z -= 0.5f;
+                        orig.z -= 2.9f;
+                        orig.x = -0.3f;
+
+                        camera.Translation = orig;
+                        vehicle = rayDrag.GetCollider() as Vehicle;
+                        //GetParent().RemoveChild(this);
+                        //vehicle.AddChild(this);
+
+                        shape.Disabled = true;
+                        vehicle.driver = this;
+
+
+                        playerState.inVehicle = true;
+                        camera.ClipToBodies = false;
+                    }
+                }
+            }
+            else
+            {
+                //level.GetNode("clients").AddChild(this);
+
+                shape.Disabled = false;
+                camera.Transform = origCameraTransform;
+
+                var gt = GlobalTransform;
+                gt.origin = (vehicle.GetNode("car").GetNode("points").GetNode("driver_outside") as Position3D).GlobalTransform.origin;
+                GlobalTransform = gt;
+
+                var rot = shape.Rotation;
+                rot.y = vehicle.Transform.basis.GetEuler().y;
+                rot.x = Mathf.Deg2Rad(-90f);
+
+                shape.Rotation = rot;
+
+
+
+                vehicle.driver = null;
+                vehicle = null;
+                playerState.inVehicle = false;
+                camera.ClipToBodies = true;
+            }
         }
 
         public override void _Input(InputEvent @event)

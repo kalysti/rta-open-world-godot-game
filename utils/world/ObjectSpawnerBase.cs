@@ -17,6 +17,8 @@ namespace Game
 
         [Export]
         public float ObjectDistance = 100.0f;
+        public Player player = null;
+
 
         public override void _ExitTree()
         {
@@ -27,7 +29,10 @@ namespace Game
                 spawnThread.Abort();
         }
 
-
+        public void SetPlayer(Player _p)
+        {
+            player = _p;
+        }
         public override void _Ready()
         {
             base._Ready();
@@ -49,7 +54,23 @@ namespace Game
                 }
                 while (_nodeToDelete.Count > 0)
                 {
-                    _nodeToDelete.Dequeue().QueueFree();
+                    var obj = _nodeToDelete.Dequeue();
+
+                    if (obj.worldObject != null && obj.worldObject.type == WorldObjectType.VEHICLE && obj.holdedObject != null)
+                    {
+                        if (player != null && player.vehicle != null && player.vehicle == obj.holdedObject)
+                        {
+                            //do nothing in case its the vehicle of the player
+                        }
+                        else
+                        {
+                            obj.QueueFree();
+                        }
+                    }
+                    else
+                    {
+                        obj.QueueFree();
+                    }
                 }
                 mut.Unlock();
 

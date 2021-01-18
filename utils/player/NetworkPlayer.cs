@@ -104,6 +104,11 @@ namespace Game
             shape.RotationDegrees = rotation;
         }
 
+        public void SetPlayerGlobalRotation(Vector3 rotation)
+        {
+            RotationDegrees = rotation;
+        }
+
         [Puppet]
         public void RequestPingPackage(uint time)
         {

@@ -17,7 +17,6 @@ namespace Game
         private bool initalize = false;
 
         public int totalObjects = 0;
-
         public int objectsDrawin
         {
             get

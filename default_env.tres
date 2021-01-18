@@ -1,6 +1,6 @@
 [gd_resource type="Environment" load_steps=3 format=2]
 
-[ext_resource path="res://stormdays_dark.jpg" type="Texture" id=1]
+[ext_resource path="res://utils/world/sky/qwantani_2k.hdr" type="Texture" id=1]
 
 [sub_resource type="PanoramaSky" id=1]
 resource_local_to_scene = true
@@ -20,6 +20,9 @@ auto_exposure_scale = 6.74
 auto_exposure_min_luma = 0.0
 auto_exposure_max_luma = 5.92
 auto_exposure_speed = 2.66
+dof_blur_far_distance = 6000.0
+dof_blur_far_transition = 3.57
+dof_blur_far_amount = 0.11
 glow_intensity = 1.46
 glow_strength = 0.71
 glow_bloom = 0.11

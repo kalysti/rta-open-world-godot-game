@@ -13,11 +13,22 @@ namespace Game
 
         private PackedScene packedLoadedScene = null;
 
+        [Signal]
+        public delegate void objectCreated();
+
+        public  void CreateChild(Node instance)
+        {
+              AddChild(instance);
+              EmitSignal(nameof(objectCreated));
+        }
         public override void _Ready()
         {
             SetObjectPosition();
             SetObjectRotation();
         }
+
+      
+        public Node holdedObject = null;
 
         public string getUniqIdent()
         {
@@ -30,7 +41,6 @@ namespace Game
             gt.origin = worldObject.GetPosition();
             GlobalTransform = gt;
         }
-
 
         public void SetObjectRotation()
         {
@@ -49,19 +59,26 @@ namespace Game
 
             if (worldObject.type == WorldObjectType.PROPERTY)
             {
-                CallDeferred("add_child", (Spatial)scene.Instance());
+                holdedObject = (Spatial)scene.Instance();
+
+                CallDeferred("CreateChild", holdedObject);
             }
             else if (worldObject.type == WorldObjectType.VEHICLE)
             {
-                CallDeferred("add_child", (Vehicle)scene.Instance());
+                holdedObject = (Vehicle)scene.Instance();
+
+                CallDeferred("CreateChild", holdedObject);
             }
             else if (worldObject.type == WorldObjectType.MARKER)
             {
-                CallDeferred("add_child", (Spatial)scene.Instance());
+                holdedObject = (Spatial)scene.Instance();
+                CallDeferred("CreateChild", holdedObject);
             }
 
             return true;
         }
+
+
         public bool LoadObjectByFilePath()
         {
             if (worldObject.type == WorldObjectType.PROPERTY)

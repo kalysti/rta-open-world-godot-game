@@ -69,6 +69,7 @@ namespace Game
         public void onSelectedChar(int charId)
         {
             charSelector.Visible = false;
+            charSelector.QueueFree();
 
             //transmit selected char to server
             ConnectToServer();

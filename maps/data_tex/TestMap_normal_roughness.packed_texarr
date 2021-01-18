@@ -1,0 +1,62 @@
+{
+	"contains_albedo": false,
+	"layers": [
+		{
+			"a": "res://maps/textures/ground_text/beach/Ground035_2K_Roughness.png",
+			"rgb": "res://maps/textures/ground_text/beach/Ground035_2K_Normal.png"
+		},
+		{
+			"a": "res://maps/textures/ground_text/beach_2/Ground033_2K_Roughness.png",
+			"rgb": "res://maps/textures/ground_text/beach_2/Ground033_2K_Normal.png"
+		},
+		{
+			"a": "res://maps/textures/ground_text/desert/Ground031_2K_Roughness.png",
+			"rgb": "res://maps/textures/ground_text/desert/Ground031_2K_Normal.png"
+		},
+		{
+			"a": "res://maps/textures/ground_text/dirt/Ground030_2K_Roughness.png",
+			"rgb": "res://maps/textures/ground_text/dirt/Ground030_2K_Normal.png"
+		},
+		{
+			"a": "res://maps/textures/ground_text/dirt_2/Ground042_2K_Roughness.png",
+			"rgb": "res://maps/textures/ground_text/dirt_2/Ground042_2K_Normal.png"
+		},
+		{
+			"a": "res://maps/textures/ground_text/errusion/Rock029_2K_Roughness.png",
+			"rgb": "res://maps/textures/ground_text/errusion/Rock029_2K_Normal.png"
+		},
+		{
+			"a": "res://maps/textures/ground_text/grass_2/Ground013_2K_Roughness.png",
+			"rgb": "res://maps/textures/ground_text/grass_2/Ground013_2K_Normal.png"
+		},
+		{
+			"a": "res://maps/textures/ground_text/mountain/Rock039_2K_Roughness.png",
+			"rgb": "res://maps/textures/ground_text/mountain/Rock039_2K_Normal.png"
+		},
+		{
+			"a": "res://maps/textures/ground_text/rocky/Rock028_2K_Roughness.png",
+			"rgb": "res://maps/textures/ground_text/rocky/Rock028_2K_Normal.png"
+		},
+		{
+			"a": "res://maps/textures/ground_text/sandy/Gravel014_2K_Roughness.png",
+			"rgb": "res://maps/textures/ground_text/sandy/Gravel014_2K_Normal.png"
+		},
+		{
+			"a": "res://maps/textures/ground_text/snow/Snow006_2K_Roughness.png",
+			"rgb": "res://maps/textures/ground_text/snow/Snow006_2K_Normal.png"
+		},
+		{
+			"a": "res://maps/textures/ground_text/vegetation/Ground037_2K_Roughness.png",
+			"rgb": "res://maps/textures/ground_text/vegetation/Ground037_2K_Normal.png"
+		},
+		{
+			"a": "res://maps/textures/ground_text/rocky_2/Rock039_2K_Roughness.png",
+			"rgb": "res://maps/textures/ground_text/rocky_2/Rock039_2K_Normal.png"
+		},
+		{
+			"a": "res://maps/textures/ground_text/grass_2/Ground013_2K_Roughness.png",
+			"rgb": "res://maps/textures/ground_text/grass_2/Ground013_2K_Normal.png"
+		}
+	],
+	"resolution": 2048
+}
