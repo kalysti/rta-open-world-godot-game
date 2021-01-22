@@ -20,6 +20,7 @@ namespace Game
 
         public override void _Ready()
         {
+
             skeleton = (Skeleton)GetNode(skeletonPath);
 
             AddClothes("body");
@@ -135,7 +136,7 @@ namespace Game
             if (node != null)
                 return;
 
-            var clothes = (PackedScene)ResourceLoader.Load("res://assets/character/clothes/"+cloth+".tscn");
+            var clothes = (PackedScene)ResourceLoader.Load("res://assets/character/clothes/" + cloth + ".tscn");
             MeshInstance newMesh = (MeshInstance)clothes.Instance();
             skeleton.AddChild(newMesh);
 
@@ -153,7 +154,7 @@ namespace Game
         }
         public void doCatwalk()
         {
-             animation_state_machine.Travel("catwalk");
+            animation_state_machine.Travel("catwalk");
         }
         public void ProcessAnimation(NetworkPlayerState state, PlayerInput movementState, float delta)
         {

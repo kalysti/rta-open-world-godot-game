@@ -25,6 +25,14 @@ namespace Game
             }
         }
 
+        public override void _Ready()
+        {
+            base._Ready();
+
+            //clear exist map objects
+            clearMapObjects();
+        }
+
         public void setInit(bool _init)
         {
             initalize = _init;

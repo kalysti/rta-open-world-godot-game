@@ -20,7 +20,7 @@ namespace Game
         public Vehicle vehicle = null;
 
         [Export]
-        public float InputPredictionMaxSize = 0.1f;
+        public float InputPredictionMaxSize = 0.25f;
 
         [Export]
         public bool posCorrection = true;
@@ -182,7 +182,6 @@ namespace Game
         [Puppet]
         public void OnServerSnapshot(string correctedSnapshotJson)
         {
-            return;
             networkStats.AddInPackage(correctedSnapshotJson);
 
             if (reProcess == true || !posCorrection)
@@ -255,15 +254,7 @@ namespace Game
 
             var movementInput = new PlayerInput();
 
-            //cursor
-            if (Input.IsActionJustPressed("ui_cancel"))
-            {
-                if (Input.GetMouseMode() == Input.MouseMode.Visible)
-                    Input.SetMouseMode(Input.MouseMode.Captured);
-
-                else
-                    Input.SetMouseMode(Input.MouseMode.Visible);
-            }
+         
 
             movementInput.cam_direction = Vector3.Zero;
             movementInput.movement_direction = Vector2.Zero;

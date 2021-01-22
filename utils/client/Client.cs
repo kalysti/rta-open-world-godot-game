@@ -18,13 +18,14 @@ namespace Game
 
         private int ownNetworkId = 0;
 
-        private World gameWorld;
+        public World gameWorld;
 
         public bool inputEnabled = true;
 
         private ServerVersion serverVersion = null;
 
         AcceptDialog customConnectDialog = null;
+        SettingsMenu settingsMenu = null;
         ServerPreAuthDialog serverPareAuthDialog = null;
         CharacterSelector charSelector = null;
 
@@ -44,15 +45,50 @@ namespace Game
             customConnectDialog.Connect("confirmed", this, "onCustomServerConnect");
 
             charSelector = GetNode("hud/char_selector") as CharacterSelector;
+            settingsMenu = GetNode("hud/settings") as SettingsMenu;
             charSelector.Visible = false;
 
             statsTimer.Name = "stats_timer";
             statsTimer.Autostart = true;
             statsTimer.WaitTime = 0.5f;
+
             statsTimer.Connect("timeout", this, "showSystemStats");
             charSelector.Connect("onSelect", this, "onSelectedChar");
 
             AddChild(statsTimer);
+            (GetNode("hud/menu/blur_bg") as Sprite).Visible = false;
+        }
+
+        public override void _PhysicsProcess(float delta)
+        {
+            base._PhysicsProcess(delta);
+
+            //cursor
+            if (Input.IsActionJustPressed("ui_cancel"))
+            {
+                if (gameWorld != null && gameWorld.IsInsideTree())
+                {
+                    if ((GetNode("hud/menu") as Control).Visible)
+                    {
+                        Input.SetMouseMode(Input.MouseMode.Captured);
+                        (GetNode("hud/menu") as Control).Visible = false;
+                        (GetNode("hud/menu/menu_bg") as TextureRect).Visible = true;
+                        (GetNode("hud/menu/blur_bg") as Sprite).Visible = false;
+                    }
+
+                    else
+                    {
+                        Input.SetMouseMode(Input.MouseMode.Visible);
+                        (GetNode("hud/menu") as Control).Visible = true;
+                        (GetNode("hud/menu/menu_bg") as TextureRect).Visible = false;
+                        (GetNode("hud/menu/blur_bg") as Sprite).Visible = true;
+                    }
+                }
+                else
+                {
+                    Input.SetMouseMode(Input.MouseMode.Visible);
+                }
+            }
         }
 
         public void onLoginSuccess(string _token)
@@ -69,7 +105,6 @@ namespace Game
         public void onSelectedChar(int charId)
         {
             charSelector.Visible = false;
-            charSelector.QueueFree();
 
             //transmit selected char to server
             ConnectToServer();
@@ -102,7 +137,7 @@ namespace Game
 
                 serverPareAuthDialog.hostname = hostname;
                 serverPareAuthDialog.port = port;
-                serverPareAuthDialog.setWelcomeMessage( "Auth on " + serverVersion.name);
+                serverPareAuthDialog.setWelcomeMessage("Auth on " + serverVersion.name);
                 serverPareAuthDialog.Visible = true;
             }
             catch (Exception e)
@@ -134,11 +169,13 @@ namespace Game
         public void onConnectionFailed()
         {
             drawSystemMessage("Error cant connect.");
+            freeMap();
         }
 
         public void onDisconnect()
         {
             drawSystemMessage("Server disconnected.");
+            freeMap();
         }
 
         public void onConnected()
@@ -155,7 +192,22 @@ namespace Game
 
         private void _on_connect_button_pressed()
         {
-            customConnectDialog.PopupCentered();
+            if (gameWorld == null || (gameWorld != null && !gameWorld.IsInsideTree()))
+            {
+                customConnectDialog.PopupCentered();
+            }
+            else
+            {
+                network.CloseConnection();
+                freeMap();
+            }
+        }
+
+        
+
+        private void _on_settings_button_pressed()
+        {
+            settingsMenu.PopupCentered();
         }
 
         [Puppet]
@@ -183,13 +235,30 @@ namespace Game
         private void doHandshake(string mapName, Vector3 spawnPoint, Vector3 spawnRot)
         {
             drawSystemMessage("Handhshaking complete. Loading map: " + mapName);
+            drawSystemMessage("Loading game world");
 
-            var newCoreMap = (PackedScene)ResourceLoader.Load("res://utils/world/World.tscn");
-            gameWorld = (World)newCoreMap.Instance();
+            (GetNode("hud/menu/lobby_music") as AudioStreamPlayer).Stop();
+
+            var t = new System.Threading.Thread(new System.Threading.ThreadStart(() =>
+            {
+                var scene = (PackedScene)ResourceLoader.Load("res://utils/world/World.tscn");
+                CallDeferred("CreateWorld", scene, spawnPoint, spawnRot);
+            }));
+
+            t.Start();
+
+        }
+
+        private void CreateWorld(PackedScene _world, Vector3 spawnPoint, Vector3 spawnRot)
+        {
+
+            gameWorld = (World)_world.Instance();
             gameWorld.Name = "world";
+
+            drawSystemMessage("Creating game world");
             AddChild(gameWorld);
 
-            drawSystemMessage("Game world init");
+            drawSystemMessage("Creating local player instance");
             gameWorld.CreateLocalPlayer(ownNetworkId, spawnPoint, spawnRot, inputEnabled);
 
             (GetNode("hud/menu") as Control).Visible = false;
@@ -209,6 +278,19 @@ namespace Game
         private void forceDisconnect(string message)
         {
             drawSystemMessage("Connection lost for reason:" + message);
+            freeMap();
+        }
+        private void freeMap()
+        {
+            drawSystemMessage("Freeing game world");
+            gameWorld.QueueFree();
+            gameWorld = null;
+            (GetNode("hud/menu") as Control).Visible = true;
+            (GetNode("hud/menu/menu_bg") as TextureRect).Visible = true;
+            (GetNode("hud/menu/blur_bg") as Sprite).Visible = false;
+            (GetNode("hud/menu/lobby_music") as AudioStreamPlayer).Play();
+            
+            Input.SetMouseMode(Input.MouseMode.Visible);
         }
 
         private void showSystemStats()
@@ -218,7 +300,7 @@ namespace Game
             var net_in = "";
             var objects = "";
 
-            if (gameWorld != null && gameWorld.player != null)
+            if (gameWorld != null && gameWorld.IsInsideTree() && gameWorld.player != null)
             {
                 pos += "x:" + Math.Round(gameWorld.player.GetPlayerPosition().x, 4);
                 pos += ", y:" + Math.Round(gameWorld.player.GetPlayerPosition().y, 4);
@@ -236,7 +318,7 @@ namespace Game
             }
 
             (GetNode("hud/top/pos") as Label).Text = "Pos: " + pos;
-            (GetNode("hud/top/net") as Label).Text = "Net in / out: "  + net_in + " / "+ net_out;
+            (GetNode("hud/top/net") as Label).Text = "Net in / out: " + net_in + " / " + net_out;
             (GetNode("hud/top/fps_counter") as Label).Text = "FPS: " + Engine.GetFramesPerSecond();
             (GetNode("hud/top/objects") as Label).Text = "Objects: " + objects;
             (GetNode("hud/top/memory") as Label).Text = "Memory: " + OS.GetStaticMemoryUsage() / 1024 / 1024 + " MB";

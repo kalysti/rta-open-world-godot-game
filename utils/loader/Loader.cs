@@ -12,14 +12,28 @@ namespace Game.Loader
 
             Core.isServer = Array.Exists(args, element => element == "server");
             Core.isDebug = Convert.ToBoolean(ProjectSettings.GetSetting("global/Debug"));
-            
+
             if (!Core.isDebug)
                 Core.isDebug = Array.Exists(args, element => element == "debug");
+            else
+            {
+                var p =  Array.Exists(args, element => element == "no-debug");
+
+                if(p)
+                {
+                    Core.isDebug = false;
+                }
+            }
 
             if (Core.isDebug)
             {
                 GD.Print("Debug version");
             }
+
+            ProjectSettings.LoadResourcePack("res://assets.pck");
+
+            //Loading shapes.dat
+            CharEditGlobal.LoadShapes();
 
             if (Core.isDebug)
                 Core.isClientAndServer = true;
@@ -29,12 +43,7 @@ namespace Game.Loader
                 startServer();
             }
 
-            if (!Core.isServer || Core.isDebug)
-            {
-                startClient();
-                //startClient2();
-            }
-            if (!Core.isServer && !Core.isDebug)
+            if (!Core.isServer || Core.isDebug || (!Core.isServer && !Core.isDebug))
             {
                 startClient();
             }

@@ -59,7 +59,7 @@ namespace Game
             database.CreateTable<AuthUser>();
             database.CreateTable<OnlineCharacter>();
             database.CreateTable<Game.WorldObject>();
-            
+
 
             restServer = new RestServer(port.ToString());
         }
@@ -92,6 +92,10 @@ namespace Game
         public void onPlayerDisconnect(int id)
         {
             GD.Print("[Server] Client " + id.ToString() + " disconnected.");
+            
+            var p = GetNode("world/players").GetNodeOrNull(id.ToString());
+            if (p != null)
+                p.QueueFree();
 
         }
         public void onPlayerConnect(int id)
@@ -127,8 +131,8 @@ namespace Game
                     if (timer != null)
                     {
                         timer.Stop();
-                        GetNode("pre_auth_users").RemoveChild(timer);
 
+                        GetNode("pre_auth_users").RemoveChild(timer);
                         GD.Print("[Server] Player authed succesfull.");
 
                         var player = CreatePlayer(id, authUser.Id);
@@ -151,6 +155,7 @@ namespace Game
         public void playerWorldLoaded()
         {
             var id = Multiplayer.GetRpcSenderId();
+            GD.Print("[Server] Player world loaded completly.");
             SendPlayerList(id);
         }
 
@@ -198,6 +203,7 @@ namespace Game
 
         private void DisconnectClient(int id, string message = "")
         {
+            GD.Print("[Server][Player][" + id + "] Disconnect Reason:" + message);
             RpcId(id, "forceDisconnect", message);
 
             var timer = GetNode("pre_auth_users").GetNode(id.ToString()) as PreAuthTimer;

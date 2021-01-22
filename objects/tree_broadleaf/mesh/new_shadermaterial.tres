@@ -1,0 +1,22 @@
+[gd_resource type="ShaderMaterial" load_steps=3 format=2]
+
+[ext_resource path="res://objects/tree_broadleaf/mesh/tex/Broadleaf_Hero_Field_Subsurface.png" type="Texture" id=1]
+[ext_resource path="res://shaders/tree_wind.shader" type="Shader" id=2]
+
+[resource]
+shader = ExtResource( 2 )
+shader_param/_wind_size = 15.0
+shader_param/_wind_dir = Plane( 0.5, 0.5, 0.5, 0.5 )
+shader_param/_ripple_speed = 15.0
+shader_param/_ripple_strogness = 100.8
+shader_param/_Tint = Plane( 1, 2, 1, 1 )
+shader_param/_tree_sway_speed = 1.0
+shader_param/_tree_sway_disp = 0.3
+shader_param/_leaves_wiggle_disp = 0.07
+shader_param/_leaves_wiggle_speed = 0.01
+shader_param/_branches_disp = 0.3
+shader_param/_tree_sway_stutter = 1.5
+shader_param/_tree_sway_stutter_influence = 0.2
+shader_param/_r_influence = 1.0
+shader_param/_b_influence = 1.0
+shader_param/texture_albedo = ExtResource( 1 )

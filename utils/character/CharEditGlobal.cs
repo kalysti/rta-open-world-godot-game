@@ -10,11 +10,10 @@ public class CharEditGlobal : Node
     // private string b = "text";
 
     // Called when the node enters the scene tree for the first time.
-    public override void _Ready()
+    public static void LoadShapes()
     {
-        GD.Print("Load shapes");
         var file = new File();
-
+        GD.Print("Load shapes");
         file.OpenCompressed("res://char_edit/shapes.dat", File.ModeFlags.Read);
 
         Godot.Collections.Dictionary shapes = (Godot.Collections.Dictionary) file.GetVar();

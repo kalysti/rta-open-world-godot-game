@@ -1,0 +1,102 @@
+[gd_resource type="VisualShader" load_steps=10 format=2]
+
+[sub_resource type="VisualShaderNodeColorConstant" id=1]
+constant = Color( 1, 0, 0, 1 )
+
+[sub_resource type="VisualShaderNodeInput" id=2]
+input_name = "color"
+
+[sub_resource type="VisualShaderNodeVectorDecompose" id=3]
+
+[sub_resource type="VisualShaderNodeVectorInterp" id=4]
+
+[sub_resource type="VisualShaderNodeColorConstant" id=5]
+constant = Color( 0, 1, 0, 1 )
+
+[sub_resource type="VisualShaderNodeColorConstant" id=6]
+constant = Color( 0, 0, 1, 1 )
+
+[sub_resource type="VisualShaderNodeVectorInterp" id=7]
+
+[sub_resource type="VisualShaderNodeVectorInterp" id=8]
+
+[sub_resource type="VisualShaderNodeColorConstant" id=9]
+constant = Color( 0, 0, 0, 1 )
+
+[resource]
+code = "shader_type spatial;
+render_mode specular_schlick_ggx;
+
+
+
+
+void vertex() {
+// Output:0
+
+}
+
+void fragment() {
+// Color:9
+	vec3 n_out9p0 = vec3(0.000000, 0.000000, 0.000000);
+	float n_out9p1 = 1.000000;
+
+// Color:10
+	vec3 n_out10p0 = vec3(1.000000, 0.000000, 0.000000);
+	float n_out10p1 = 1.000000;
+
+// Input:2
+	vec3 n_out2p0 = COLOR.rgb;
+
+// VectorDecompose:3
+	float n_out3p0 = n_out2p0.x;
+	float n_out3p1 = n_out2p0.y;
+	float n_out3p2 = n_out2p0.z;
+
+// VectorMix:8
+	vec3 n_out8p0 = mix(n_out9p0, n_out10p0, vec3(n_out3p0));
+
+// Color:5
+	vec3 n_out5p0 = vec3(0.000000, 1.000000, 0.000000);
+	float n_out5p1 = 1.000000;
+
+// VectorMix:7
+	vec3 n_out7p0 = mix(n_out8p0, n_out5p0, vec3(n_out3p1));
+
+// Color:6
+	vec3 n_out6p0 = vec3(0.000000, 0.000000, 1.000000);
+	float n_out6p1 = 1.000000;
+
+// VectorMix:4
+	vec3 n_out4p0 = mix(n_out7p0, n_out6p0, vec3(n_out3p2));
+
+// Output:0
+	ALBEDO = n_out4p0;
+
+}
+
+void light() {
+// Output:0
+
+}
+"
+graph_offset = Vector2( 0, 190 )
+nodes/fragment/0/position = Vector2( 720, 0 )
+nodes/fragment/2/node = SubResource( 2 )
+nodes/fragment/2/position = Vector2( 60, 40 )
+nodes/fragment/3/node = SubResource( 3 )
+nodes/fragment/3/position = Vector2( 220, 40 )
+nodes/fragment/4/node = SubResource( 4 )
+nodes/fragment/4/position = Vector2( 520, 320 )
+nodes/fragment/5/node = SubResource( 5 )
+nodes/fragment/5/position = Vector2( 300, 260 )
+nodes/fragment/6/node = SubResource( 6 )
+nodes/fragment/6/position = Vector2( 300, 360 )
+nodes/fragment/7/node = SubResource( 7 )
+nodes/fragment/7/position = Vector2( 540, 200 )
+nodes/fragment/8/node = SubResource( 8 )
+nodes/fragment/8/position = Vector2( 460, 100 )
+nodes/fragment/9/node = SubResource( 9 )
+nodes/fragment/9/position = Vector2( 140, 140 )
+nodes/fragment/10/node = SubResource( 1 )
+nodes/fragment/10/position = Vector2( 280, 140 )
+nodes/fragment/connections = PoolIntArray( 2, 0, 3, 0, 3, 0, 8, 2, 3, 1, 7, 2, 3, 2, 4, 2, 8, 0, 7, 0, 7, 0, 4, 0, 9, 0, 8, 0, 10, 0, 8, 1, 5, 0, 7, 1, 6, 0, 4, 1, 4, 0, 0, 0 )

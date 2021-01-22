@@ -44,6 +44,7 @@ config/icon="res://logo.png"
 [autoload]
 
 CharEditGlobal="*res://utils/character/CharEditGlobal.cs"
+UserSettings="*res://utils/client/Settings/UserSettings.cs"
 
 [display]
 
@@ -54,7 +55,7 @@ window/vsync/use_vsync=false
 
 [editor_plugins]
 
-enabled=PoolStringArray( "TerrainLoader", "road_editor", "waterways", "zylann.hterrain" )
+enabled=PoolStringArray( "godot_game_tools", "road_editor", "vegetation_spawner", "zylann.hterrain" )
 
 [gdnative]
 
@@ -137,6 +138,14 @@ editor={
  ]
 }
 
+[logging]
+
+file_logging/enable_file_logging=true
+
+[mono]
+
+profiler/enabled=true
+
 [physics]
 
 3d/active_soft_world=false
@@ -148,7 +157,6 @@ threads/thread_model=2
 quality/filters/anisotropic_filter_level=2
 quality/filters/use_nearest_mipmap_filter=true
 quality/filters/msaa=2
-environment/default_environment="res://default_env.tres"
 quality/godrays/sample_number=200
 quality/godrays/use_pcf5=true
 quality/godrays/dither_amount=1.0

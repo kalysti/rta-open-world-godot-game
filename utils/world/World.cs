@@ -19,6 +19,8 @@ namespace Game
         public override void _Ready()
         {
             spawner = (ObjectSpawner) GetNode(objectSpawnerPath);
+            var settings =  GetTree().Root.GetNode("UserSettings") as UserSettings;;
+            setSSAO(settings.getSsaoEnabled());
         }
 
         public void CreateLocalPlayer(int id, Vector3 spawnPoint, Vector3 spawnRot, bool inputEnabled = true)
@@ -35,6 +37,11 @@ namespace Game
 
             spawner.setInit(true);
             spawner.SetPlayer(player);
+        }
+
+        public void setSSAO(bool ssao_on)
+        {
+           (GetNode("WorldEnvironment") as WorldEnvironment).Environment.SsaoEnabled = ssao_on;
         }
 
         public void CreatePuppet(int networkId, uint timestamp, Vector3 pos, Vector3 rot, bool inputEnabled = true)

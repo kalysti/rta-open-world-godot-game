@@ -1,0 +1,19 @@
+[remap]
+
+importer="wavefront_obj"
+type="Mesh"
+path="res://.import/Wüstenstrauch.obj.obj-1e82e641e05f3ed59bcbb1e332bad811.mesh"
+
+[deps]
+
+files=[ "res://.import/Wüstenstrauch.obj.obj-1e82e641e05f3ed59bcbb1e332bad811.mesh" ]
+
+source_file="res://maps/materials/dry_grass/source/Wüstenstrauch.obj.obj"
+dest_files=[ "res://.import/Wüstenstrauch.obj.obj-1e82e641e05f3ed59bcbb1e332bad811.mesh", "res://.import/Wüstenstrauch.obj.obj-1e82e641e05f3ed59bcbb1e332bad811.mesh" ]
+
+[params]
+
+generate_tangents=true
+scale_mesh=Vector3( 1, 1, 1 )
+offset_mesh=Vector3( 0, 0, 0 )
+optimize_mesh=true

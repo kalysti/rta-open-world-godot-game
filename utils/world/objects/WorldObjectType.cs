@@ -9,7 +9,8 @@ namespace Game
 
         PROPERTY,
         MARKER,
-        VEHICLE
+        VEHICLE,
+        SYSTEM
     }
 }
 

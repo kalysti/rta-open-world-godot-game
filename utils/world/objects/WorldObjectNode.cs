@@ -60,16 +60,19 @@ namespace Game
             if (worldObject.type == WorldObjectType.PROPERTY)
             {
                 holdedObject = (Spatial)scene.Instance();
-
                 CallDeferred("CreateChild", holdedObject);
             }
             else if (worldObject.type == WorldObjectType.VEHICLE)
             {
                 holdedObject = (Vehicle)scene.Instance();
-
                 CallDeferred("CreateChild", holdedObject);
             }
             else if (worldObject.type == WorldObjectType.MARKER)
+            {
+                holdedObject = (Spatial)scene.Instance();
+                CallDeferred("CreateChild", holdedObject);
+            }
+            else if (worldObject.type == WorldObjectType.SYSTEM)
             {
                 holdedObject = (Spatial)scene.Instance();
                 CallDeferred("CreateChild", holdedObject);
@@ -89,6 +92,11 @@ namespace Game
             else if (worldObject.type == WorldObjectType.VEHICLE)
             {
                 return LoadScene("res://vehicles/" + worldObject.modelName + ".tscn");
+
+            }
+            else if (worldObject.type == WorldObjectType.SYSTEM)
+            {
+                return LoadScene("res://" + worldObject.modelName + ".tscn");
 
             }
             else if (worldObject.type == WorldObjectType.MARKER)

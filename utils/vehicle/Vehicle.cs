@@ -84,8 +84,6 @@ namespace Game
         }
 
 
-
-
         private void InitWheel(string name)
         {
             var fl_wheel = new wheel();
@@ -113,7 +111,7 @@ namespace Game
             if (driver != null)
             {
                 var charOffset = new Vector3(0, 0.5f, 0);
-                var chair = GetNode("car/points/driver_inside") as Position3D;
+                var chair = GetNode("points/driver_inside") as Position3D;
                 driver.SetPlayerPosition(chair.GlobalTransform.origin - charOffset);
 
                 /** TODO: ADD ROTATION FOR CAR DRIVING */
@@ -259,6 +257,12 @@ namespace Game
                 current_gear = 0;
                 EngineForce = 0f;
             }
+
+            
+            (GetNode("lights/break_r") as OmniLight).Visible = brake_val > 0.1;
+            (GetNode("lights/break_r") as OmniLight).Visible = brake_val > 0.1;
+            (GetNode("lights/reverse_r") as OmniLight).Visible= (current_gear <= -1);
+            (GetNode("lights/reverse_l") as OmniLight).Visible= (current_gear <= -1);
         }
 
         private void ShiftGears()

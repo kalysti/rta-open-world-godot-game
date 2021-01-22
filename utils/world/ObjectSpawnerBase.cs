@@ -50,8 +50,10 @@ namespace Game
 
                 while (_spawnQueue.Count > 0)
                 {
-                    SpawnObject(_spawnQueue.Dequeue());
+                    var newObj = _spawnQueue.Dequeue();
+                    SpawnObject(newObj);
                 }
+
                 while (_nodeToDelete.Count > 0)
                 {
                     var obj = _nodeToDelete.Dequeue();
@@ -81,20 +83,49 @@ namespace Game
 
         public WorldObjectNode SpawnObject(WorldObject spawn)
         {
-            var node = new WorldObjectNode();
-            node.worldObject = spawn;
-            node.Name = spawn.Id.ToString();
-            CallDeferred("add_child", node);
-
-
-            bool result = node.LoadObjectByFilePath();
-            if (result)
+            try
             {
-                return node;
+                var node = new WorldObjectNode();
+                node.worldObject = spawn;
+                node.Name = spawn.Id.ToString();
+
+                bool result = node.LoadObjectByFilePath();
+                node.Visible = false;
+
+                var arr = new Godot.Collections.Array();
+                arr.Add(node);
+                arr.Add(result);
+                
+                if (result)
+                {
+                    CallDeferred("add_child", node);
+                    node.CallDeferred("set_visible", true);
+
+                    return node;
+                }
+                else
+                    return null;
             }
-            else
+            catch
+            {
                 return null;
+            }
         }
+
+
+        protected void clearMapObjects()
+        {
+            GD.Print("[Server/Client] Clear exist scenes");
+
+            foreach (var item in GetParent().GetNode("map_holder/map").GetChildren())
+            {
+                if (item is RoadGridMap || item is VegetationSpawner)
+                {
+                    (item as Node).QueueFree();
+                }
+            }
+        }
+
 
     }
 }
