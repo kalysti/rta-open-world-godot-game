@@ -6,7 +6,8 @@ namespace Game
     public class NetworkPlayer : KinematicBody
     {
         public NetworkPlayerState playerState = new NetworkPlayerState();
-
+        public PlayerFootsteps footstepSystem = null;
+        public World world = null;
         protected const float JUMP_POWER = 15.0f;
         protected const float JUMP_DURATION = 1f;
         protected const float AIR_SPEED = 6.0f;
@@ -45,12 +46,24 @@ namespace Game
         [Export]
         public NodePath shapePath;
 
+        [Export]
+        public NodePath footstepSystemPath;
         private Timer jumpTimer = new Timer();
         private Timer pingTimer = new Timer();
+
+        public Vector3 currentVelocity = Vector3.Zero;
 
         public void InitPlayer()
         {
             rayGround = (RayCast)GetNode(rayGroundPath);
+
+            if (footstepSystemPath != null)
+            {
+                var footstep = GetNodeOrNull(footstepSystemPath);
+                if (footstep != null)
+                    footstepSystem = (PlayerFootsteps)footstep;
+            }
+
             shape = (CollisionShape)GetNode(shapePath);
             shape_orientation = shape.GlobalTransform;
 
@@ -60,9 +73,6 @@ namespace Game
             AddChild(jumpTimer);
 
             jumpTimer.Connect("timeout", this, "onJumpTimerTimeout");
-
-
-
 
             if (Multiplayer.IsNetworkServer())
             {
@@ -146,7 +156,8 @@ namespace Game
 
         public Vector3 DoWalk(Vector3 velocity)
         {
-            return MoveAndSlide(velocity, Vector3.Up, true, 4, Mathf.Deg2Rad(MAX_SLOPE_ANGLE), false);
+            currentVelocity = MoveAndSlide(velocity, Vector3.Up, true, 4, Mathf.Deg2Rad(MAX_SLOPE_ANGLE), false);
+            return currentVelocity;
         }
 
         public Vector3 CalculateVelocityByInput(PlayerInput movementState, float delta)
@@ -157,7 +168,6 @@ namespace Game
             }
             else
                 playerState.onGround = false;
-
 
             movementState.velocity.y -= GRAVITY * delta;
 
@@ -180,19 +190,14 @@ namespace Game
                 accel = DEACCEL;
             }
 
-
-
             var tempValue = movementState.velocity.LinearInterpolate(target, accel * delta);
             tempValue.y = 0;
-
 
             //friction
             //todo: need a better solution
 
             if (tempValue.Length() < FRICTION_LIMITER && movementState.movement_direction.Length() == 0)
             {
-
-
                 tempValue = movementState.velocity.LinearInterpolate(Vector3.Zero, FRICTION);
                 movementState.velocity.z = tempValue.z;
                 movementState.velocity.x = tempValue.x;
@@ -202,10 +207,6 @@ namespace Game
                 movementState.velocity.z = tempValue.z;
                 movementState.velocity.x = tempValue.x;
             }
-
-
-
-
 
 
             //want jump
@@ -218,8 +219,6 @@ namespace Game
 
             //face moving dir
             doCameraRotation(movementState, delta);
-
-
 
             return movementState.velocity;
         }

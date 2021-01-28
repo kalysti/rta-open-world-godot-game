@@ -26,8 +26,13 @@ namespace Game
         private string currentObjectName = null;
         private string currentVehicleName = null;
 
+        private BackgroundLoader backgroundLoader;
+
         public override void _Ready()
         {
+
+            backgroundLoader = GetTree().Root.GetNode("BackgroundLoader") as BackgroundLoader;
+
             dialog = GetNode("dialog") as WindowDialog;
             world = GetParent().GetParent().GetParent() as World;
             player = GetParent() as Player;
@@ -36,7 +41,6 @@ namespace Game
             dialog.GetCloseButton().Connect("pressed", this, "onClose");
             dialog.FindNode("add_object").Connect("pressed", this, "addObject");
             dialog.FindNode("add_vehicle").Connect("pressed", this, "addVehicle");
-
 
             objectList = dialog.FindNode("object_list") as ItemList;
             objectList.Connect("item_selected", this, "onObjectSelected");
@@ -127,9 +131,14 @@ namespace Game
 
         private void showVehicle(string name)
         {
-            var oldObject = FindNode("car_camera_viewport").GetNodeOrNull("vehicle_holder");
+            var oldObject = FindNode("car_camera_viewport");
             if (oldObject != null)
-                oldObject.QueueFree();
+            {
+                foreach (var x in oldObject.GetChildren())
+                {
+                    (x as Node).QueueFree();
+                }
+            }
 
             if (!ResourceLoader.Exists("res://vehicles/" + name + ".tscn"))
             {
@@ -149,9 +158,14 @@ namespace Game
 
         private void showObject(string name)
         {
-            var oldObject = FindNode("camera_viewport").GetNodeOrNull("object_holder");
+            var oldObject = FindNode("camera_viewport");
             if (oldObject != null)
-                oldObject.QueueFree();
+            {
+                foreach (var x in oldObject.GetChildren())
+                {
+                    (x as Node).QueueFree();
+                }
+            }
 
             if (!ResourceLoader.Exists("res://objects/" + name + ".tscn"))
             {
@@ -193,29 +207,6 @@ namespace Game
             }
         }
 
-        private void DrawVehicle(string modelName)
-        {
-            if (newWorldObject != null)
-                return;
-
-            newWorldObject = new Game.WorldObjectNode
-            {
-                worldObject = new Game.WorldObject
-                {
-                    type = Game.WorldObjectType.VEHICLE,
-                    modelName = modelName
-                }
-            };
-
-            objectLoaded = false;
-
-            newWorldObject.Name = "temp_object";
-            saveObject = false;
-            newWorldObject.Connect("objectCreated", this, "CreateException");
-            world.AddChild(newWorldObject);
-            newWorldObject.LoadObjectByFilePath();
-
-        }
         private bool objectLoaded = false;
         private void CreateException()
         {
@@ -272,7 +263,7 @@ namespace Game
             Input.SetMouseMode(Input.MouseMode.Captured);
         }
 
-        public override void _PhysicsProcess(float delta)
+        public override void _Process(float delta)
         {
             if (newWorldObject == null || !newWorldObject.IsInsideTree())
                 return;
@@ -286,7 +277,6 @@ namespace Game
             if (Input.IsActionJustPressed("rmb") && Input.GetMouseMode() != Input.MouseMode.Visible)
                 CancelRequest();
         }
-
 
         private List<string> scanDir(string path)
         {
@@ -326,24 +316,66 @@ namespace Game
             if (newWorldObject != null)
                 return;
 
+            objectLoaded = false;
+
+            var obj = new Game.WorldObject
+            {
+                type = Game.WorldObjectType.PROPERTY,
+                modelName = modelName
+            };
+
+            var bgloader = new BackgroundLoaderObjectItem(obj);
+            bgloader.OnLoaderComplete += objectCreated;
+            backgroundLoader.Load(bgloader);
+        }
+
+        private void DrawVehicle(string modelName)
+        {
+            if (newWorldObject != null)
+                return;
+
+            newWorldObject = new Game.WorldObjectNode
+            {
+                worldObject = new Game.WorldObject
+                {
+                    type = Game.WorldObjectType.VEHICLE,
+                    modelName = modelName
+                }
+            };
+
+            newWorldObject.Name = "temp_object";
+            saveObject = false;
+            world.AddChild(newWorldObject);
+            newWorldObject.disableLoding();
+            CreateException();
+
+            // newWorldObject.LoadObjectByFilePath();
+
+        }
+
+        public void objectCreated(Resource res, WorldObject obj)
+        {
             newWorldObject = new Game.WorldObjectNode
             {
                 worldObject = new Game.WorldObject
                 {
                     type = Game.WorldObjectType.PROPERTY,
-                    modelName = modelName
+                    modelName = obj.modelName
                 }
             };
 
-
+            newWorldObject.CreateScene(res);
             newWorldObject.Name = "temp_object";
-            saveObject = false;
-            newWorldObject.Connect("objectCreated", this, "CreateException");
-            world.AddChild(newWorldObject);
 
-            newWorldObject.LoadObjectByFilePath();
+            saveObject = false;
+
+            world.AddChild(newWorldObject);
+            newWorldObject.disableLoding();
+
+            objectLoaded = true;
             AddException(newWorldObject);
         }
+
         public override void _Input(InputEvent @event)
         {
             if (@event is InputEventMouseButton)
@@ -399,8 +431,9 @@ namespace Game
                     var modelType = newWorldObject.worldObject.type;
                     var position = newWorldObject.GlobalTransform.origin;
                     var rotation = newWorldObject.Rotation;
+                    var scale = newWorldObject.Scale;
 
-                    world.spawner.AskToCreate(modelName, modelType, position, rotation);
+                    world.spawner.AskToCreate(modelName, modelType, position, rotation, scale);
                 }
             }
 

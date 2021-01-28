@@ -22,7 +22,7 @@ namespace Game
         public int maxPlayers = 10;
 
         [Export]
-        public int port = 27021;
+        public int port = 27015;
         [Export]
         public int maxPreAuthWaitTime = 10;
 
@@ -49,33 +49,36 @@ namespace Game
             CreateDatabase();
         }
 
-
         private void CreateDatabase()
         {
             var databasePath = System.IO.Path.Combine(OS.GetUserDataDir(), "database.db");
             GD.Print("DB Path: " + databasePath);
 
             database = new SQLiteConnection(databasePath);
+
             database.CreateTable<AuthUser>();
             database.CreateTable<OnlineCharacter>();
             database.CreateTable<Game.WorldObject>();
 
-
-            restServer = new RestServer(port.ToString());
+            restServer = new RestServer((port + 1).ToString());
         }
 
         public override void _ExitTree()
         {
-            restServer.Close();
+            if (restServer != null)
+            {
+                restServer.Close();
+            }
+            
+            if (database != null)
+                database.Close();
         }
 
         public override void _Ready()
         {
-
             InitNetwork();
 
             spawner = (ObjectSpawnerServer)GetNode(objectSpawnerPath);
-
             spawner.CustomMultiplayer = spawner.CustomMultiplayer;
 
             network.SetBindIp(ip);
@@ -86,13 +89,12 @@ namespace Game
 
             Multiplayer.Connect("network_peer_connected", this, "onPlayerConnect");
             Multiplayer.Connect("network_peer_disconnected", this, "onPlayerDisconnect");
-
         }
 
         public void onPlayerDisconnect(int id)
         {
             GD.Print("[Server] Client " + id.ToString() + " disconnected.");
-            
+
             var p = GetNode("world/players").GetNodeOrNull(id.ToString());
             if (p != null)
                 p.QueueFree();
@@ -122,6 +124,12 @@ namespace Game
 
             GD.Print("[Server] " + id.ToString() + " try to auth");
 
+            if (GetNodeOrNull("world/map_holder/map") == null)
+            {
+                DisconnectClient(id, "Server not ready.");
+                return;
+            }
+
             if (accessToken != null)
             {
                 var authUser = Server.database.Table<AuthUser>().Where(o => o.Token == accessToken).FirstOrDefault();
@@ -131,7 +139,6 @@ namespace Game
                     if (timer != null)
                     {
                         timer.Stop();
-
                         GetNode("pre_auth_users").RemoveChild(timer);
                         GD.Print("[Server] Player authed succesfull.");
 
@@ -155,8 +162,18 @@ namespace Game
         public void playerWorldLoaded()
         {
             var id = Multiplayer.GetRpcSenderId();
-            GD.Print("[Server] Player world loaded completly.");
-            SendPlayerList(id);
+            GD.Print("[Server][" + id + "] Player world loaded completly.");
+            var objects = spawner.allObjects();
+            
+            //send object list
+            RpcId(id, "InitObjectList", Game.Networking.NetworkCompressor.Compress(objects));
+        }
+
+        [Remote]
+        public void playerObjectInitalized()
+        {
+            var id = Multiplayer.GetRpcSenderId();
+            GD.Print("[Server][" + id + "] Player world objects loaded completly.");
         }
 
         private void SendPlayerList(int id)
@@ -187,13 +204,29 @@ namespace Game
             player.Name = id.ToString();
             player.networkId = id;
             player.authId = authid;
+            player.Visible = true;
+            player.isInitalized = false;
 
             GetNode("world/players").AddChild(player);
+            player.SetPlayerPosition((GetNode("world/map_holder/map") as BaseMap).GetSpawnPoint());
 
-            player.Teleport((GetNode("world/map_holder/map") as BaseMap).GetSpawnPoint());
             Rpc("CreatePuppet", id, OS.GetTicksMsec(), player.GetPlayerPosition(), player.GetPlayerRotation());
 
             return player;
+        }
+
+        [Remote]
+        public void ActivatePlayer()
+        {
+            GD.Print("[Server] Activate player");
+            var id = Multiplayer.GetRpcSenderId();
+            var player = GetNodeOrNull<ServerPlayer>("world/players/" + id.ToString());
+
+            if (player != null)
+            {
+                player.Teleport((GetNode("world/map_holder/map") as BaseMap).GetSpawnPoint());
+                player.isInitalized = true;
+            }
         }
 
         private void onPreAuthTimeout(int id)

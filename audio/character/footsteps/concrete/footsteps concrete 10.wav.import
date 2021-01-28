@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/footsteps concrete 10.wav-6c45842f20b97a14052141966f957618.sample"
+
+[deps]
+
+source_file="res://audio/character/footsteps/concrete/footsteps concrete 10.wav"
+dest_files=[ "res://.import/footsteps concrete 10.wav-6c45842f20b97a14052141966f957618.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0

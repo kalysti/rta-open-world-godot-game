@@ -181,6 +181,7 @@ namespace Game
 
         public override void _Process(float delta)
         {
+            return;
             counter -= delta;
             if (counter <= 0)
             {

@@ -21,6 +21,14 @@ public class VegetationSpawner : Spatial
 
     private NodePath _terrainPath = null;
 
+    public override void _EnterTree()
+    {
+        base._EnterTree();
+
+        if(!Engine.EditorHint)
+            Visible = false;
+    }
+
     [Export]
     public NodePath terrainPath
     {

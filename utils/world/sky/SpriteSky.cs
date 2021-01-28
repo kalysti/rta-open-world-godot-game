@@ -22,6 +22,7 @@ public class SpriteSky : Sprite
     {
         if (iTime >= 0)
             nodeInit = true;
+            
         iTime += delta / cloudSpeed;
         iFrame += 1;
         Material.Set("shader_param/iTime", iTime);

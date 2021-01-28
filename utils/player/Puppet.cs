@@ -11,8 +11,6 @@ namespace Game
 
         public uint clientTick = 0;
 
-        public Vector3 velcoity = new Vector3();
-
         public override void _Ready()
         {
             InitPlayer();
@@ -40,6 +38,7 @@ namespace Game
 
         public override void _Process(float delta)
         {
+            return;
             uint pastTick = clientTick - InterpolationDelay;
             var fromNode = stateBuffer.First;
             var toNode = fromNode.Next;

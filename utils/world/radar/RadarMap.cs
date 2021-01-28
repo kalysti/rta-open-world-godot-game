@@ -28,6 +28,7 @@ public class RadarMap : Control
     //  // Called every frame. 'delta' is the elapsed time since the previous frame.
     public override void _Process(float delta)
     {
+            return;
         var player = (GetParent().GetParent() as Player);
         var vec2 = (FindNode("3d_camera") as Camera).UnprojectPosition(player.GetPlayerPosition());
         if (myPos != null)

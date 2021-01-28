@@ -19,13 +19,15 @@ namespace Game.Rest
         public RestServer(string port)
         {
             serverUrl = "http://*:" + port + "/";
+
             serverThread = new System.Threading.Thread(new ThreadStart(CreateWebServer));
             serverThread.Start();
         }
 
         public void Close()
         {
-            serverThread.Abort();
+            if (serverThread != null)
+                serverThread.Abort();
         }
         private void CreateWebServer()
         {

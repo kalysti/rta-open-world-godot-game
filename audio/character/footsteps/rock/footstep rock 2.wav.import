@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/footstep rock 2.wav-e9744cf52fd4adf2a233aee69f503efe.sample"
+
+[deps]
+
+source_file="res://audio/character/footsteps/rock/footstep rock 2.wav"
+dest_files=[ "res://.import/footstep rock 2.wav-e9744cf52fd4adf2a233aee69f503efe.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0

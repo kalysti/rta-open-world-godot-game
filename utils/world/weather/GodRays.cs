@@ -73,6 +73,7 @@ public class GodRays : Spatial
 
     public override void _Process(float delta)
     {
+        return;
 
         if (light == null)
         {

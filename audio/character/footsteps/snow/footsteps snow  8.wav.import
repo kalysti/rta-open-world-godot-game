@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/footsteps snow  8.wav-4d69cb1ce32f45fd3d55d22f9fce5f47.sample"
+
+[deps]
+
+source_file="res://audio/character/footsteps/snow/footsteps snow  8.wav"
+dest_files=[ "res://.import/footsteps snow  8.wav-4d69cb1ce32f45fd3d55d22f9fce5f47.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0

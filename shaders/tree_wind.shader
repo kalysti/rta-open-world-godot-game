@@ -219,6 +219,7 @@ void vertex() {
 
 void fragment() {
 	
+	
 // Input:19
 	vec3 n_out19p0 = vec3(UV, 0.0);
 

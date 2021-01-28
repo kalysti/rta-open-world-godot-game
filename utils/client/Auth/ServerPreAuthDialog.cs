@@ -6,7 +6,7 @@ public class ServerPreAuthDialog : Control
 {
     public string hostname = "localhost";
 
-    public int port = 27021;
+    public int port = 27015;
 
     [Signal]
     public delegate void onLogin(string token);
@@ -34,7 +34,7 @@ public class ServerPreAuthDialog : Control
             var password = (FindNode("preauth_login_password") as LineEdit).Text;
 
             var credentials = new AuthCredentials { username = username, password = password };
-            var restClient = new RestClient.Net.Client(new RestClient.Net.NewtonsoftSerializationAdapter(), new Uri("http://" + hostname + ":" + port + "/api/login"));
+            var restClient = new RestClient.Net.Client(new RestClient.Net.NewtonsoftSerializationAdapter(), new Uri("http://" + hostname + ":" + (port+1) + "/api/login"));
             AuthLoginAccountMessage response = await restClient.PostAsync<AuthLoginAccountMessage, AuthCredentials>(credentials);
 
             if (response.success)
@@ -63,7 +63,7 @@ public class ServerPreAuthDialog : Control
 
             var credentials = new AuthCredentials { username = username, password = password };
 
-            var restClient = new RestClient.Net.Client(new RestClient.Net.NewtonsoftSerializationAdapter(), new Uri("http://" + hostname + ":" + port + "/api/register"));
+            var restClient = new RestClient.Net.Client(new RestClient.Net.NewtonsoftSerializationAdapter(), new Uri("http://" + hostname + ":" + (port+1) + "/api/register"));
             AuthCreateAccountMessage response = await restClient.PostAsync<AuthCreateAccountMessage, AuthCredentials>(credentials);
 
 

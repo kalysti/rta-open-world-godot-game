@@ -11,7 +11,7 @@ public class CreateDialogWindow : WindowDialog
 {
     protected string accessToken = null;
     public string hostname = "localhost";
-    public int port = 27021;
+    public int port = 27015;
 
     [Signal]
     public delegate void OnPlayerCreated(int charId, string fristname, string lastname, string birthday, bool isMale);
@@ -57,7 +57,7 @@ public class CreateDialogWindow : WindowDialog
 
             var onlineCharacter = new OnlineCharacter { firstname = firstname, lastname = lastname, birthday = birthday, isMale = gender };
 
-            var restClient = new RestClient.Net.Client(new RestClient.Net.NewtonsoftSerializationAdapter(), new Uri("http://" + hostname + ":" + port + "/api/createCharacter"));
+            var restClient = new RestClient.Net.Client(new RestClient.Net.NewtonsoftSerializationAdapter(), new Uri("http://" + hostname + ":" + (port+1) + "/api/createCharacter"));
             restClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + accessToken);
 
             CharCreatedMessage response = await restClient.PostAsync<CharCreatedMessage, OnlineCharacter>(onlineCharacter);

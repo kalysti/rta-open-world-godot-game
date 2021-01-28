@@ -1,0 +1,339 @@
+[gd_resource type="ShaderMaterial" load_steps=31 format=2]
+
+[ext_resource path="res://maps/textures/ground_text/sandy/Gravel014_2K_Color.png" type="Texture" id=1]
+[ext_resource path="res://maps/textures/ground_text/snow/Snow006_2K_Color.png" type="Texture" id=2]
+[ext_resource path="res://maps/textures/ground_text/sandy/Gravel014_2K_Normal.png" type="Texture" id=3]
+[ext_resource path="res://maps/textures/ground_text/errusion/Rock029_2K_Normal.png" type="Texture" id=4]
+[ext_resource path="res://maps/textures/ground_text/errusion/Rock029_2K_Color.png" type="Texture" id=5]
+[ext_resource path="res://maps/textures/ground_text/rocky/Rock028_2K_Normal.png" type="Texture" id=6]
+[ext_resource path="res://maps/textures/ground_text/grass_1/Ground003_2K_Roughness.jpg" type="Texture" id=7]
+[ext_resource path="res://maps/textures/ground_text/dirt/Ground030_2K_Color.png" type="Texture" id=10]
+[ext_resource path="res://maps/textures/ground_text/dirt/Ground030_2K_Normal.png" type="Texture" id=11]
+[ext_resource path="res://maps/textures/ground_text/grass_1/Ground003_2K_Color.jpg" type="Texture" id=12]
+[ext_resource path="res://maps/textures/ground_text/snow/Snow006_2K_Normal.png" type="Texture" id=13]
+[ext_resource path="res://maps/textures/ground_text/rocky/Rock028_2K_Color.png" type="Texture" id=14]
+[ext_resource path="res://maps/textures/ground_text/errusion/Rock029_2K_Displacement.png" type="Texture" id=15]
+[ext_resource path="res://maps/textures/ground_text/desert/Ground031_2K_Roughness.png" type="Texture" id=16]
+[ext_resource path="res://maps/textures/ground_text/sandy/Gravel014_2K_Roughness.png" type="Texture" id=17]
+[ext_resource path="res://maps/textures/ground_text/rocky/Rock028_2K_Displacement.png" type="Texture" id=18]
+[ext_resource path="res://maps/textures/ground_text/sandy/Gravel014_2K_Displacement.png" type="Texture" id=19]
+[ext_resource path="res://maps/textures/ground_text/dirt/Ground030_2K_Roughness.png" type="Texture" id=20]
+[ext_resource path="res://maps/textures/ground_text/grass_1/Ground003_2K_Normal.jpg" type="Texture" id=21]
+[ext_resource path="res://maps/textures/ground_text/errusion/Rock029_2K_AmbientOcclusion.png" type="Texture" id=22]
+[ext_resource path="res://maps/textures/ground_text/dirt/Ground030_2K_AmbientOcclusion.png" type="Texture" id=24]
+[ext_resource path="res://maps/textures/ground_text/dirt/Ground030_2K_Displacement.png" type="Texture" id=27]
+[ext_resource path="res://maps/textures/ground_text/grass_1/Ground003_2K_Displacement.jpg" type="Texture" id=28]
+[ext_resource path="res://maps/textures/ground_text/errusion/Rock029_2K_Roughness.png" type="Texture" id=29]
+[ext_resource path="res://maps/textures/ground_text/snow/Snow006_2K_Displacement.png" type="Texture" id=31]
+[ext_resource path="res://maps/textures/ground_text/sandy/Gravel014_2K_AmbientOcclusion.png" type="Texture" id=32]
+[ext_resource path="res://maps/textures/ground_text/rocky/Rock028_2K_AmbientOcclusion.png" type="Texture" id=33]
+[ext_resource path="res://maps/textures/ground_text/snow/Snow006_2K_AmbientOcclusion.png" type="Texture" id=34]
+[ext_resource path="res://maps/textures/ground_text/snow/Snow006_2K_Roughness.png" type="Texture" id=35]
+
+[sub_resource type="Shader" id=3]
+code = "shader_type spatial;
+render_mode  cull_disabled,  world_vertex_coords;
+
+uniform vec2 HEIGHTMAP_SIZE = vec2(1024.0, 1024.0);
+uniform vec3 mapScale = vec3(0,0,0);
+
+
+uniform float desertHeight = 280f;
+uniform float groundHeight = 300f;
+uniform float clifHeight = 200f;
+uniform float mountainsHeight = 320f;
+uniform float snowHeight = 400f;
+uniform float roughness = 1.0f;
+
+uniform sampler2D beachTex  : hint_albedo;
+uniform sampler2D groundTex: hint_albedo;
+uniform sampler2D mountainTex: hint_albedo;
+uniform sampler2D desertTex: hint_albedo;
+uniform sampler2D dirtTex: hint_albedo;
+uniform sampler2D cliffTex: hint_albedo;
+uniform sampler2D snowTex: hint_albedo;
+uniform sampler2D errusionTex: hint_albedo;
+
+uniform sampler2D beachTexNormal;
+uniform sampler2D groundTexNormal;
+uniform sampler2D mountainTexNormal;
+uniform sampler2D desertTexNormal;
+uniform sampler2D dirtTexNormal;
+uniform sampler2D cliffTexNormal;
+uniform sampler2D snowTexNormal;
+uniform sampler2D errusionTexNormal;
+
+uniform sampler2D beachTexBump  : hint_albedo;
+uniform sampler2D groundTexBump : hint_albedo;
+uniform sampler2D mountainTexBump : hint_albedo;
+uniform sampler2D desertTexBump : hint_albedo;
+uniform sampler2D dirtTexBump : hint_albedo;
+uniform sampler2D cliffTexBump : hint_albedo;
+uniform sampler2D snowTexBump : hint_albedo;
+uniform sampler2D errusionTexBump : hint_albedo;
+
+
+uniform sampler2D beachTexAO;
+uniform sampler2D groundTexAO;
+uniform sampler2D mountainTexAO;
+uniform sampler2D desertTexAO;
+uniform sampler2D dirtTexAO;
+uniform sampler2D cliffTexAO;
+uniform sampler2D snowTexAO;
+uniform sampler2D errusionTexAO;
+
+uniform sampler2D beachTexRoughness;
+uniform sampler2D groundTexRoughness;
+uniform sampler2D mountainTexRoughness ;
+uniform sampler2D desertTexRoughness ;
+uniform sampler2D dirtTexRoughness ;
+uniform sampler2D cliffTexRoughness ;
+uniform sampler2D snowTexRoughness ;
+uniform sampler2D errusionTexRoughness;
+
+uniform vec2 beach_scale = vec2(1,1);
+uniform vec2 ground_scale = vec2(1,1);
+uniform vec2 mountain_scale = vec2(1,1);
+uniform vec2 grass_scale = vec2(1,1);
+uniform vec2 desert_scale = vec2(1,1);
+uniform vec2 dirt_scale = vec2(1,1);
+uniform vec2 cliff_scale = vec2(1,1);
+uniform vec2 snow_scale = vec2(1,1);
+uniform vec2 errusion_scale= vec2(1,1); 
+
+uniform vec4 u_tile_reduction = vec4(0.0, 0.0, 0.0, 0.0);
+uniform vec4 beachColor : hint_color;
+uniform vec4 groundColor : hint_color;
+uniform vec4 mountainColor : hint_color;
+uniform vec4 desertColor : hint_color;
+uniform vec4 dirtColor : hint_color;
+uniform vec4 cliffColor : hint_color;
+uniform vec4 snowColor : hint_color;
+uniform vec4 errusionColor : hint_color;
+
+uniform float mixnFactor = 1.0;
+uniform float slope_factor = 1.0;
+
+varying float height_val;
+varying vec3 normal;
+
+
+void vertex(){
+	height_val = VERTEX.y;
+	normal = NORMAL;
+	VERTEX += VERTEX * mapScale;
+}
+
+
+float get_slope_of_terrain(float height_normal){
+	float slope = 1.0-height_normal;
+	slope *= slope;
+	return (slope*slope_factor);
+}
+
+float mixIn(float curr_height, float heightMin, float heightMax)
+{
+		if (curr_height > heightMax){
+		return 1.0;
+	}
+	if (curr_height  < heightMin){
+		return 0.0;
+	}
+
+
+	return  clamp((curr_height-heightMin) / (heightMax-heightMin), 0f,1f);
+}
+vec2 rotate(vec2 v, float cosa, float sina) {
+	return vec2(cosa * v.x - sina * v.y, sina * v.x + cosa * v.y);
+}
+vec4 getText(sampler2D sample, vec2 uv)
+{
+	float frequency = 2.0;
+	float scale = 1.3;
+	float sharpness = 0.7;
+	
+	// Rotate and scale UV
+	float rot = 3.14 * 0.6;
+	float cosa = cos(rot);
+	float sina = sin(rot);
+	vec2 uv2 = rotate(uv, cosa, sina) * scale;
+	
+	float t = 1.2 + 
+		  sin(uv2.x * frequency + sin(uv.x) * 2.0) 
+		* cos(uv2.y * frequency + sin(uv.y) * 2.0); 
+	t = smoothstep(sharpness, 2.0 - sharpness, t);
+
+	vec4 orig = texture(sample, uv);
+	vec4 col1 = texture(sample, uv2);
+	
+	return mix(orig, col1, t) ;
+}
+vec4 mixTextures(vec4 beach, vec4 mountain, vec4 grass, vec4 desert, vec4 dirt, vec4 cliff, vec4 snow, vec4 errusion)
+{
+	float slope = clamp(get_slope_of_terrain(normal.y), 0.0, 1.0);
+
+	vec4 snowColorMix =  mix( mountain, snow, slope);
+	vec4 mountainColorMix =  mix( mountain, snowColorMix, mixIn(height_val, mountainsHeight, snowHeight));
+	
+
+	vec4 grass_mixin = mix(grass, dirt,  slope);
+	vec4 groundColorMix =  mix( grass_mixin, mountainColorMix, mixIn(height_val, groundHeight, mountainsHeight ));
+	
+	vec4 desert_mixin = mix(desert, dirt, slope);
+	vec4 desertColorMix =  mix( desert_mixin, groundColorMix, mixIn(height_val, desertHeight, groundHeight ));
+	
+	vec4 cliffColorMix =  mix( cliff, desertColorMix, mixIn(height_val, clifHeight, desertHeight ));
+	vec4 mixColor =  mix( beach, cliffColorMix, mixIn(height_val, 0f, clifHeight ));
+	
+	return mixColor;
+	
+}
+
+void fragment() {
+	
+
+	
+	vec4 beach = vec4(getText(beachTex, UV*beach_scale).rgba);
+	vec4 ground = vec4(getText(groundTex, UV*ground_scale).rgba);
+	vec4 mountain = vec4(getText(mountainTex, UV*mountain_scale).rgba);
+	vec4 grass = vec4(getText(groundTex, UV*grass_scale).rgba);
+	vec4 desert = vec4(getText(desertTex, UV*desert_scale).rgba);
+	vec4 dirt = vec4(getText(dirtTex, UV*dirt_scale).rgba);	
+	vec4 cliff = vec4(getText(cliffTex, UV*cliff_scale).rgba);	
+	vec4 snow = vec4(getText(snowTex, UV*snow_scale).rgba);
+	vec4 errusion = vec4(getText(errusionTex, UV*errusion_scale).rgba);
+	
+
+	vec4 beachNormal = vec4(getText(beachTexNormal, UV*beach_scale).rgba);
+	vec4 groundNormal = vec4(getText(groundTexNormal, UV*ground_scale).rgba);
+	vec4 mountainNormal = vec4(getText(mountainTexNormal, UV*mountain_scale).rgba);
+
+	vec4 desertNormal = vec4(getText(desertTexNormal, UV*desert_scale).rgba);
+	vec4 dirtNormal = vec4(getText(dirtTexNormal, UV*dirt_scale).rgba);	
+	vec4 cliffNormal = vec4(getText(cliffTexNormal, UV*cliff_scale).rgba);	
+	vec4 snowNormal = vec4(getText(snowTexNormal, UV*snow_scale).rgba);
+	vec4 errusionNormal = vec4(getText(errusionTexNormal, UV*errusion_scale).rgba);
+	
+	
+	vec4 beachBump = vec4(getText(beachTexBump, UV*beach_scale).rgba);
+	vec4 groundBump = vec4(getText(groundTexBump, UV*ground_scale).rgba);
+	vec4 mountainBump = vec4(getText(mountainTexBump, UV*mountain_scale).rgba);
+
+	vec4 desertBump = vec4(getText(desertTexBump, UV*desert_scale).rgba);
+	vec4 dirtBump = vec4(getText(dirtTexBump, UV*dirt_scale).rgba);	
+	vec4 cliffBump = vec4(getText(cliffTexBump, UV*cliff_scale).rgba);	
+	vec4 snowBump = vec4(getText(snowTexBump, UV*snow_scale).rgba);
+	vec4 errusionBump = vec4(getText(errusionTexBump, UV*errusion_scale).rgba);
+	
+	vec4 beachRoughness = vec4(getText(beachTexRoughness, UV*beach_scale).rgba);
+	vec4 groundRoughness = vec4(getText(groundTexRoughness, UV*ground_scale).rgba);
+	vec4 mountainRoughness = vec4(getText(mountainTexRoughness, UV*mountain_scale).rgba);
+
+	vec4 desertRoughness = vec4(getText(desertTexRoughness, UV*desert_scale).rgba);
+	vec4 dirtRoughness = vec4(getText(dirtTexRoughness, UV*dirt_scale).rgba);	
+	vec4 cliffRoughness = vec4(getText(cliffTexRoughness, UV*cliff_scale).rgba);	
+	vec4 snowRoughness = vec4(getText(snowTexRoughness, UV*snow_scale).rgba);
+	vec4 errusionRoughness = vec4(getText(errusionTexRoughness, UV*errusion_scale).rgba);
+	
+	vec4 beachAO = vec4(getText(beachTexAO, UV*beach_scale).rgba);
+	vec4 groundAO = vec4(getText(groundTexAO, UV*ground_scale).rgba);
+	vec4 mountainAO = vec4(getText(mountainTexAO, UV*mountain_scale).rgba);
+
+	vec4 desertAO = vec4(getText(desertTexAO, UV*desert_scale).rgba);
+	vec4 dirtAO = vec4(getText(dirtTexAO, UV*dirt_scale).rgba);	
+	vec4 cliffAO = vec4(getText(cliffTexAO, UV*cliff_scale).rgba);	
+	vec4 snowAO = vec4(getText(snowTexAO, UV*snow_scale).rgba);
+	vec4 errusionAO = vec4(getText(errusionTexAO, UV*errusion_scale).rgba);
+	
+	
+	//vec4 (vec4 beach, vec4 mountain, vec4 grass, vec4 desert, vec4 dirt, vec4 cliff, vec4 snow, vec4 errusion)
+	vec4 albedoMix = mixTextures(beach, mountain,grass,desert,dirt,cliff,snow,errusion);
+	vec4 normalMix = mixTextures(beachNormal,  mountainNormal,groundNormal,desertNormal,dirtNormal,cliffNormal,snowNormal,errusionNormal);
+    vec4 RoughnessMix = mixTextures(beachRoughness, mountainRoughness,groundRoughness,desertRoughness,dirtRoughness,cliffRoughness,snowRoughness,errusionRoughness);
+	vec4 BumpMix = mixTextures(beachBump,  mountainBump,groundBump,desertBump,dirtBump,cliffBump,snowBump,errusionBump);
+	vec4 AOMix = mixTextures(beachAO,  mountainAO,groundAO,desertAO,dirtAO,cliffAO,snowAO,errusionAO);
+	
+	ALBEDO = vec3(1f,0f,0f);
+	//ALBEDO = mixTextures(beachColor,  mountainColor, groundColor, desertColor,dirtColor,cliffColor,snowColor, errusionColor).rgb;
+	ALBEDO = albedoMix.rgb;
+	//AO = AOMix.r;
+	
+	float roughness_tex = dot(RoughnessMix, vec4(1.0f,0f,0f,0f));
+	float ao_tex = dot(AOMix, vec4(1.0f,0f,0f,0f));
+	//ROUGHNESS = sqrt(roughness_tex * roughness);
+	AO = ao_tex;
+	AO_LIGHT_AFFECT = 1.0;
+	
+	vec4 normalmap = normalMix * vec4(2.0,2.0,2.0,2.0) - vec4(1.0,1.0,1.0,1.0);
+	vec3 newNormal = normalize(TANGENT * normalmap.y + BINORMAL * normalmap.x + NORMAL * normalmap.z);
+	NORMAL = newNormal;
+	NORMALMAP = normalmap.rgb;
+
+	//ALPHA = 1.0;
+	NORMALMAP_DEPTH = 1.0;
+}"
+
+[resource]
+shader = SubResource( 3 )
+shader_param/HEIGHTMAP_SIZE = Vector2( 1024, 1024 )
+shader_param/mapScale = Vector3( 0, 0, 0 )
+shader_param/desertHeight = 540.0
+shader_param/groundHeight = 542.0
+shader_param/clifHeight = 480.0
+shader_param/mountainsHeight = 630.0
+shader_param/snowHeight = 1000.0
+shader_param/roughness = 0.5
+shader_param/beach_scale = Vector2( 3000, 3000 )
+shader_param/ground_scale = Vector2( 3000, 3000 )
+shader_param/mountain_scale = Vector2( 3000, 3000 )
+shader_param/grass_scale = Vector2( 3000, 3000 )
+shader_param/desert_scale = Vector2( 3000, 3000 )
+shader_param/dirt_scale = Vector2( 3000, 3000 )
+shader_param/cliff_scale = Vector2( 3000, 3000 )
+shader_param/snow_scale = Vector2( 3000, 3000 )
+shader_param/errusion_scale = Vector2( 3000, 3000 )
+shader_param/u_tile_reduction = Plane( 0, 0, 0, 0 )
+shader_param/beachColor = Color( 0.890196, 0.0745098, 0.980392, 1 )
+shader_param/groundColor = Color( 0, 0.203922, 1, 1 )
+shader_param/mountainColor = Color( 0.0941176, 0.0941176, 0.0941176, 1 )
+shader_param/desertColor = Color( 1, 0.929412, 0.164706, 1 )
+shader_param/dirtColor = Color( 0.337255, 0.556863, 1, 1 )
+shader_param/cliffColor = Color( 1, 0, 0, 1 )
+shader_param/snowColor = Color( 1, 1, 1, 1 )
+shader_param/errusionColor = Color( 0.0313726, 1, 0, 1 )
+shader_param/mixnFactor = 10000.0
+shader_param/slope_factor = 1.0
+shader_param/beachTex = ExtResource( 1 )
+shader_param/groundTex = ExtResource( 12 )
+shader_param/mountainTex = ExtResource( 14 )
+shader_param/desertTex = ExtResource( 1 )
+shader_param/dirtTex = ExtResource( 10 )
+shader_param/cliffTex = ExtResource( 5 )
+shader_param/snowTex = ExtResource( 2 )
+shader_param/beachTexNormal = ExtResource( 3 )
+shader_param/groundTexNormal = ExtResource( 21 )
+shader_param/mountainTexNormal = ExtResource( 6 )
+shader_param/desertTexNormal = ExtResource( 3 )
+shader_param/dirtTexNormal = ExtResource( 11 )
+shader_param/cliffTexNormal = ExtResource( 4 )
+shader_param/snowTexNormal = ExtResource( 13 )
+shader_param/beachTexBump = ExtResource( 19 )
+shader_param/groundTexBump = ExtResource( 28 )
+shader_param/mountainTexBump = ExtResource( 18 )
+shader_param/desertTexBump = ExtResource( 19 )
+shader_param/dirtTexBump = ExtResource( 27 )
+shader_param/cliffTexBump = ExtResource( 15 )
+shader_param/snowTexBump = ExtResource( 31 )
+shader_param/beachTexAO = ExtResource( 32 )
+shader_param/mountainTexAO = ExtResource( 33 )
+shader_param/desertTexAO = ExtResource( 32 )
+shader_param/dirtTexAO = ExtResource( 24 )
+shader_param/cliffTexAO = ExtResource( 22 )
+shader_param/snowTexAO = ExtResource( 34 )
+shader_param/beachTexRoughness = ExtResource( 17 )
+shader_param/groundTexRoughness = ExtResource( 7 )
+shader_param/mountainTexRoughness = ExtResource( 17 )
+shader_param/desertTexRoughness = ExtResource( 16 )
+shader_param/dirtTexRoughness = ExtResource( 20 )
+shader_param/cliffTexRoughness = ExtResource( 29 )
+shader_param/snowTexRoughness = ExtResource( 35 )

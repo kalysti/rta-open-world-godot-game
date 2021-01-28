@@ -6,103 +6,114 @@ namespace Game
 {
     public class ObjectSpawner : ObjectSpawnerBase
     {
-
+        [Export]
+        public float MinDistanceToPlayer = 350f;
 
         [Export]
-        public float SyncTime = 0.5f;
+        public int scanTimeInMs = 100;
 
-        private float syncedTime = 0.0f;
+        public bool scanThreadIsRunning = false;
 
-        private bool onUpdate = false;
-        private bool initalize = false;
+        public System.Threading.Thread scanThread = null;
 
-        public int totalObjects = 0;
-        public int objectsDrawin
+
+        public Player player = null;
+
+        public bool isObjectDatabaseSynced = false;
+
+
+        public override void _ExitTree()
         {
-            get
+            base._ExitTree();
+
+            if (scanThread != null)
             {
-                return GetChildCount();
+                scanThreadIsRunning = false;
+                scanThread.Abort();
             }
         }
 
-        public override void _Ready()
+        public void InitObjectList(List<WorldObject> objects, Vector3 spawnPoint)
         {
-            base._Ready();
+            GD.Print("[Client] Creating world objects");
 
-            //clear exist map objects
-            clearMapObjects();
-        }
+            isObjectDatabaseSynced = false;
+            tempObjects = objects;
 
-        public void setInit(bool _init)
-        {
-            initalize = _init;
-        }
+            var objectsInSpawnArea = findObjectsByPosition(spawnPoint, MinDistanceToPlayer);
 
-        public override void _Process(float delta)
-        {
-            base._Process(delta);
-
-            if (!initalize)
-                return;
-
-            if (syncedTime >= SyncTime)
+            foreach (var x in objectsInSpawnArea)
             {
-                if (!onUpdate)
-                    RpcUnreliableId(1, "GetObjectList", (GetParent() as World).player.GetPlayerPosition(), ObjectDistance);
-                syncedTime = 0.0f;
+                CreateWorldObject(x);
             }
 
-            syncedTime += delta;
+            isObjectDatabaseSynced = true;
+        }
+        public void startScanThread()
+        {
+            scanThreadIsRunning = true;
+            scanThread = new System.Threading.Thread(scanPlayersInObjectArea);
+            scanThread.Start();
         }
 
-        public void AskToCreate(string model, WorldObjectType type, Vector3 pos, Vector3 rot)
+        protected void scanPlayersInObjectArea()
         {
-            RpcId(1, "AddObject", model, type, pos, rot);
-        }
-
-        [Puppet]
-        private void UpdateClientObjectList(string json, int _totalObjects)
-        {
-            if (onUpdate)
-                return;
-
-            onUpdate = true;
-            var objects = Networking.NetworkCompressor.Decompress<List<WorldObject>>(json);
-            CreateObjectsFromList(objects);
-            totalObjects = _totalObjects;
-            onUpdate = false;
-        }
-
-        private void CreateObjectsFromList(List<WorldObject> _list)
-        {
-            var ids = _list.Select(c => c.Id.ToString()).ToList();
-            _spawnQueue.Clear();
-
-            foreach (var obj in _list)
+            while (scanThreadIsRunning)
             {
-                var exist = GetNodeOrNull(obj.Id.ToString());
-                if (exist != null)
-                    continue;
-                else
+                //be sure that we can grad the next object snapshot
+                if (deleteChildsQueue.Count <= 0 && createChildsQueue.Count <= 0 && creationInProgress.Count <= 0)
                 {
-                    _spawnQueue.Enqueue(obj);
-                }
-            }
+                    //find all objects in close area
+                    var currentSceneObjects = findObjectsInNearOfPlayer(player, MinDistanceToPlayer);
 
-            foreach (WorldObjectNode existObj in GetChildren())
-            {
-                if (!ids.Contains(existObj.Name))
-                {
-                    _nodeToDelete.Enqueue(existObj);
+
+                    var needsToCreate = currentSceneObjects.Distinct().ToList();
+                    var needsToDelete = new List<WorldObjectNode>();
+
+                    foreach (var x in GetChildren())
+                    {
+                        if (x is WorldObjectNode)
+                        {
+                            var tf = x as WorldObjectNode;
+                            if (currentSceneObjects.Count(df => df.Id == tf.worldObject.Id) <= 0)
+                            {
+                                needsToDelete.Add(tf);
+                            }
+                        }
+                    }
+
+                    foreach (var x in needsToCreate)
+                    {
+                        CreateWorldObject(x);
+                    }
+
+                    foreach (var x in needsToDelete)
+                    {
+                        deleteChildsQueue.Enqueue(x);
+                    }
                 }
+
+                System.Threading.Thread.Sleep(scanTimeInMs);
             }
+        }
+
+        public bool allInitObjectsCreated()
+        {
+            return (createChildsQueue.Count == 0 && creationInProgress.Count == 0 && isObjectDatabaseSynced == true);
+        }
+
+        public void AskToCreate(string model, WorldObjectType type, Vector3 pos, Vector3 rot, Vector3 scale)
+        {
+            RpcId(1, "AddObject", model, type, pos, rot, scale);
         }
 
         [Puppet]
         private void OnNewObject(string objectJson)
         {
             var obj = Networking.NetworkCompressor.Decompress<WorldObject>(objectJson);
-            _spawnQueue.Enqueue(obj);
+            tempObjects.Add(obj);
+
+            //create object synced
         }
     }
 }

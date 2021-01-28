@@ -1,25 +1,100 @@
 using Godot;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Game
 {
     public class ObjectSpawnerServer : ObjectSpawnerBase
     {
-        public override void _Ready()
-        {
-            base._Ready();
+        [Export]
+        public float MinDistanceToPlayer = 250f;
 
+        [Export]
+        public int scanTimeInMs = 100;
+
+        public bool scanThreadIsRunning = false;
+
+        public System.Threading.Thread scanThread = null;
+
+        [Export]
+        public bool refreshDatabase = true;
+
+        public override void _ExitTree()
+        {
+            base._ExitTree();
+
+            if (scanThread != null)
+            {
+                scanThreadIsRunning = false;
+                scanThread.Abort();
+            }
+        }
+
+        public void Init(BaseMap map)
+        {
             if (Server.database != null)
             {
-                clearSystemObjects();
-
-                //detect veg and grid spawner
-                foreach (var item in Server.database.Table<WorldObject>().ToList())
+                if (refreshDatabase)
                 {
-                    _spawnQueue.Enqueue(item);
+                    GD.Print("[Server] Object database refreshed");
+                    clearSystemObjects();
+                    getSystemObjects(map);
                 }
 
-                getSystemObjects();
+                clearMapObjects(map);
+                tempObjects = Server.database.Table<WorldObject>().ToList();
+
+                scanThreadIsRunning = true;
+                scanThread = new System.Threading.Thread(scanPlayersInObjectArea);
+                scanThread.Start();
+            }
+        }
+
+        protected void scanPlayersInObjectArea()
+        {
+            while (scanThreadIsRunning)
+            {
+                //be sure that we can grad the next object snapshot
+                if (deleteChildsQueue.Count <= 0 && createChildsQueue.Count <= 0 && creationInProgress.Count <= 0)
+                {
+                    //find all objects in close area
+                    var currentSceneObjects = new List<WorldObject>();
+                    foreach (var item in GetParent().GetNode("players").GetChildren())
+                    {
+                        if (item is ServerPlayer)
+                        {
+                            var p = item as ServerPlayer;
+                            currentSceneObjects.AddRange(findObjectsInNearOfPlayer(p, MinDistanceToPlayer));
+                        }
+                    }
+
+                    var needsToCreate = currentSceneObjects.Distinct().ToList();
+                    var needsToDelete = new List<WorldObjectNode>();
+
+                    foreach (var x in GetChildren())
+                    {
+                        if (x is WorldObjectNode)
+                        {
+                            var tf = x as WorldObjectNode;
+
+                            if (currentSceneObjects.Count(df => df.Id == tf.worldObject.Id) <= 0)
+                            {
+                                needsToDelete.Add(tf);
+                            }
+                        }
+                    }
+
+                    foreach (var x in needsToCreate)
+                    {
+                        CreateWorldObject(x);
+                    }
+
+                    foreach (var x in needsToDelete)
+                    {
+                        deleteChildsQueue.Enqueue(x);
+                    }
+                }
+                System.Threading.Thread.Sleep(scanTimeInMs);
             }
         }
 
@@ -34,20 +109,17 @@ namespace Game
         /**
             Create system objects from terrain generators
         */
-        private void getSystemObjects()
+        private void getSystemObjects(BaseMap map)
         {
             GD.Print("[Server] Init object list");
 
-            foreach (var item in GetParent().GetNode("map_holder/map").GetChildren())
+            foreach (var item in map.GetChildren())
             {
                 if (item is RoadGridMap || item is VegetationSpawner)
                 {
                     moveObjectsToDatabase((item as Node).GetChildren());
                 }
             }
-
-            //clear exist map objects
-            clearMapObjects();
         }
 
         /**
@@ -62,42 +134,25 @@ namespace Game
 
                 var item = child as Spatial;
                 var modelpath = item.Filename.Replace(".tscn", "").Replace("res://", "");
-                GD.Print("[Server][Objects] Create" + modelpath);
 
-                AddObjectToDatabase(modelpath, WorldObjectType.SYSTEM, item.GlobalTransform.origin, item.Rotation);
+                var rot = item.GlobalTransform.basis.GetEuler();
+                AddObjectToDatabase(modelpath, WorldObjectType.SYSTEM, item.GlobalTransform.origin, rot, item.Scale);
             }
         }
 
         [Remote]
-        public void GetObjectList(Vector3 position, float distance)
-        {
-            var list = new List<WorldObject>();
-            foreach (WorldObjectNode x in GetChildren())
-            {
-                if (x.worldObject != null && (x.worldObject.GetPosition() - position).Length() <= distance)
-                {
-                    list.Add(x.worldObject);
-                }
-            }
-
-            var id = Multiplayer.GetRpcSenderId();
-            var objectJson = Networking.NetworkCompressor.Compress(list);
-
-            RpcId(id, "UpdateClientObjectList", objectJson, GetChildCount());
-        }
-
-        [Remote]
-        public void AddObject(string model, WorldObjectType type, Vector3 pos, Vector3 rot)
+        public void AddObject(string model, WorldObjectType type, Vector3 pos, Vector3 rot, Vector3 scale)
         {
             GD.Print("[Server][Object] Create " + model);
 
-            var obj = AddObjectToDatabase(model, type, pos, rot);
+            var obj = AddObjectToDatabase(model, type, pos, rot, scale);
             var objectJson = Networking.NetworkCompressor.Compress(obj);
+            tempObjects.Add(obj);
 
             Rpc("OnNewObject", objectJson);
         }
 
-        private WorldObject AddObjectToDatabase(string model, WorldObjectType type, Vector3 pos, Vector3 rot)
+        private WorldObject AddObjectToDatabase(string model, WorldObjectType type, Vector3 pos, Vector3 rot, Vector3 scale)
         {
             var obj = new WorldObject
             {
@@ -106,10 +161,10 @@ namespace Game
             };
 
             obj.SetPosition(pos);
+            obj.SetScale(scale);
             obj.SetRotation(rot);
 
             Server.database.Insert(obj);
-            _spawnQueue.Enqueue(obj);
 
             return obj;
         }

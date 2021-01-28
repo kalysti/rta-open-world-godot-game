@@ -10,6 +10,8 @@ namespace Game
     {
         private uint lastProccesTimestamp = 0;
 
+        public bool isInitalized = false;
+
         public Queue<FrameSnapshot> snapshotQueue = new Queue<FrameSnapshot>();
 
         public override void _Ready()
@@ -31,6 +33,11 @@ namespace Game
 
         public override void _PhysicsProcess(float delta)
         {
+            if(!isInitalized)
+                return;
+
+            
+                
             FrameSnapshot sendSnapshot = null;
             int movesMade = 0;
 

@@ -1,15 +1,70 @@
-[gd_resource type="AudioBusLayout" format=2]
+[gd_resource type="AudioBusLayout" load_steps=7 format=2]
+
+[sub_resource type="AudioEffectStereoEnhance" id=1]
+resource_name = "StereoEnhance"
+
+[sub_resource type="AudioEffectReverb" id=2]
+resource_name = "Reverb"
+room_size = 0.33
+damping = 0.21
+spread = 0.59
+wet = 0.01
+
+[sub_resource type="AudioEffectEQ" id=3]
+resource_name = "EQ"
+band_db/32_hz = -21.2
+band_db/10000_hz = -9.1
+
+[sub_resource type="AudioEffectLimiter" id=4]
+resource_name = "Limiter"
+ceiling_db = -10.0
+
+[sub_resource type="AudioEffectPanner" id=5]
+resource_name = "Panner"
+
+[sub_resource type="AudioEffectStereoEnhance" id=6]
+resource_name = "StereoEnhance"
 
 [resource]
 bus/1/name = "lobby"
 bus/1/solo = false
-bus/1/mute = false
+bus/1/mute = true
 bus/1/bypass_fx = false
 bus/1/volume_db = -7.63485
 bus/1/send = "Master"
-bus/2/name = "environment"
+bus/2/name = "footsteps"
 bus/2/solo = false
 bus/2/mute = false
 bus/2/bypass_fx = false
-bus/2/volume_db = -6.91795
+bus/2/volume_db = -5.93075
 bus/2/send = "Master"
+bus/2/effect/0/effect = SubResource( 1 )
+bus/2/effect/0/enabled = true
+bus/2/effect/1/effect = SubResource( 2 )
+bus/2/effect/1/enabled = true
+bus/2/effect/2/effect = SubResource( 3 )
+bus/2/effect/2/enabled = true
+bus/3/name = "env_master"
+bus/3/solo = false
+bus/3/mute = false
+bus/3/bypass_fx = false
+bus/3/volume_db = 1.65599
+bus/3/send = "Master"
+bus/4/name = "waves"
+bus/4/solo = false
+bus/4/mute = false
+bus/4/bypass_fx = false
+bus/4/volume_db = 3.83799
+bus/4/send = "env_master"
+bus/4/effect/0/effect = SubResource( 4 )
+bus/4/effect/0/enabled = true
+bus/4/effect/1/effect = SubResource( 5 )
+bus/4/effect/1/enabled = false
+bus/4/effect/2/effect = SubResource( 6 )
+bus/4/effect/2/enabled = true
+bus/5/name = "env"
+bus/5/solo = false
+bus/5/mute = false
+bus/5/bypass_fx = false
+bus/5/volume_db = -21.0931
+bus/5/send = "env_master"

@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/footsteps glass  7.wav-13c92378f4f6bf9b48c1106e24bcf7b9.sample"
+
+[deps]
+
+source_file="res://audio/character/footsteps/glass/footsteps glass  7.wav"
+dest_files=[ "res://.import/footsteps glass  7.wav-13c92378f4f6bf9b48c1106e24bcf7b9.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0

@@ -1,16 +1,11 @@
-[gd_resource type="Environment" load_steps=3 format=2]
+[gd_resource type="Environment" load_steps=2 format=2]
 
-[ext_resource path="res://utils/world/sky/qwantani_2k.hdr" type="Texture" id=1]
-
-[sub_resource type="PanoramaSky" id=1]
-resource_local_to_scene = true
-panorama = ExtResource( 1 )
+[sub_resource type="ProceduralSky" id=1]
 
 [resource]
 background_mode = 2
 background_sky = SubResource( 1 )
 background_color = Color( 1, 1, 1, 1 )
-background_energy = 1.28
 fog_color = Color( 0.631373, 0.694118, 0.74902, 1 )
 fog_sun_color = Color( 1, 0.870588, 0.870588, 1 )
 fog_depth_end = 3000.0

@@ -12,9 +12,9 @@ namespace Game
         public string hostname = "localhost";
 
         [Export]
-        public int port = 27021;
+        public int port = 27015;
 
-        protected string accessToken = "Q80GQUXJTQD29BP414NG53TBDGALELLEYB75UE00MP0KW3GFRDST6EX6JP14IKDA6GSV9JKF090J3VT9";
+        protected string accessToken = null;
 
         private int ownNetworkId = 0;
 
@@ -50,7 +50,7 @@ namespace Game
 
             statsTimer.Name = "stats_timer";
             statsTimer.Autostart = true;
-            statsTimer.WaitTime = 0.5f;
+            statsTimer.WaitTime = 1.0f;
 
             statsTimer.Connect("timeout", this, "showSystemStats");
             charSelector.Connect("onSelect", this, "onSelectedChar");
@@ -58,10 +58,9 @@ namespace Game
             AddChild(statsTimer);
             (GetNode("hud/menu/blur_bg") as Sprite).Visible = false;
         }
-
-        public override void _PhysicsProcess(float delta)
+        public override void _Process(float delta)
         {
-            base._PhysicsProcess(delta);
+            base._Process(delta);
 
             //cursor
             if (Input.IsActionJustPressed("ui_cancel"))
@@ -90,7 +89,6 @@ namespace Game
                 }
             }
         }
-
         public void onLoginSuccess(string _token)
         {
             accessToken = _token;
@@ -131,7 +129,7 @@ namespace Game
         {
             try
             {
-                var restClient = new RestClient.Net.Client(new RestClient.Net.NewtonsoftSerializationAdapter(), new Uri("http://" + hostname + ":" + port + "/api/hello"));
+                var restClient = new RestClient.Net.Client(new RestClient.Net.NewtonsoftSerializationAdapter(), new Uri("http://" + hostname + ":" + (port + 1) + "/api/hello"));
                 serverVersion = await restClient.GetAsync<ServerVersion>();
                 drawSystemMessage("Server version: v" + serverVersion.version);
 
@@ -203,8 +201,6 @@ namespace Game
             }
         }
 
-        
-
         private void _on_settings_button_pressed()
         {
             settingsMenu.PopupCentered();
@@ -215,6 +211,39 @@ namespace Game
         {
             if (gameWorld != null && gameWorld.player != null && playerId != gameWorld.player.networkId)
                 gameWorld.CreatePuppet(playerId, timestamp, pos, rot);
+        }
+
+        [Puppet]
+        public void InitObjectList(string objectListJson)
+        {
+            var objectList = Game.Networking.NetworkCompressor.Decompress<List<WorldObject>>(objectListJson);
+
+            if (gameWorld == null)
+                return;
+
+            gameWorld.spawner.InitObjectList(objectList, spawnPoint);
+
+            //Creation objects are finish
+            var creationThread = new System.Threading.Thread(() =>
+            {
+                while (!gameWorld.spawner.allInitObjectsCreated())
+                {
+                    System.Threading.Thread.Sleep(100);
+                }
+
+                CallDeferred("playerWorldProccesed");
+            });
+
+            creationThread.Start();
+        }
+
+        public void playerWorldProccesed()
+        {
+
+            GD.Print("[Client] Game world is processed");
+            gameWorld.CreateLocalPlayer(ownNetworkId, spawnPoint, spawnRotation, inputEnabled);
+            Input.SetMouseMode(Input.MouseMode.Captured);
+            RpcId(1, "ActivatePlayer");
         }
 
         [Puppet]
@@ -230,40 +259,33 @@ namespace Game
                 gameWorld.CreatePuppet(item.playerId, item.timestamp, item.pos, item.rot);
             }
         }
+        private Vector3 spawnPoint = Vector3.Zero;
+        private Vector3 spawnRotation = Vector3.Zero;
 
         [Puppet]
-        private void doHandshake(string mapName, Vector3 spawnPoint, Vector3 spawnRot)
+        private void doHandshake(string mapName, Vector3 _spawnPoint, Vector3 _spawnRot)
         {
             drawSystemMessage("Handhshaking complete. Loading map: " + mapName);
             drawSystemMessage("Loading game world");
 
             (GetNode("hud/menu/lobby_music") as AudioStreamPlayer).Stop();
 
-            var t = new System.Threading.Thread(new System.Threading.ThreadStart(() =>
-            {
-                var scene = (PackedScene)ResourceLoader.Load("res://utils/world/World.tscn");
-                CallDeferred("CreateWorld", scene, spawnPoint, spawnRot);
-            }));
-
-            t.Start();
-
-        }
-
-        private void CreateWorld(PackedScene _world, Vector3 spawnPoint, Vector3 spawnRot)
-        {
-
-            gameWorld = (World)_world.Instance();
+            var scene = (PackedScene)ResourceLoader.Load("res://utils/world/World.tscn");
+            gameWorld = (World)scene.Instance();
             gameWorld.Name = "world";
-
-            drawSystemMessage("Creating game world");
             AddChild(gameWorld);
 
-            drawSystemMessage("Creating local player instance");
-            gameWorld.CreateLocalPlayer(ownNetworkId, spawnPoint, spawnRot, inputEnabled);
-
+            spawnPoint = _spawnPoint;
+            spawnRotation = _spawnRot;
             (GetNode("hud/menu") as Control).Visible = false;
-            Input.SetMouseMode(Input.MouseMode.Captured);
 
+            gameWorld.Connect("onMapLoadComplete", this, "onPlayerWorldLoaded");
+            gameWorld.LoadMap();
+        }
+
+        private void onPlayerWorldLoaded()
+        {
+            drawSystemMessage("Creating game world");
             RpcId(1, "playerWorldLoaded");
         }
 
@@ -282,14 +304,18 @@ namespace Game
         }
         private void freeMap()
         {
-            drawSystemMessage("Freeing game world");
-            gameWorld.QueueFree();
-            gameWorld = null;
+            if (gameWorld != null)
+            {
+                drawSystemMessage("Freeing game world");
+                gameWorld.QueueFree();
+                gameWorld = null;
+            }
+
             (GetNode("hud/menu") as Control).Visible = true;
             (GetNode("hud/menu/menu_bg") as TextureRect).Visible = true;
             (GetNode("hud/menu/blur_bg") as Sprite).Visible = false;
             (GetNode("hud/menu/lobby_music") as AudioStreamPlayer).Play();
-            
+
             Input.SetMouseMode(Input.MouseMode.Visible);
         }
 

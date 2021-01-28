@@ -13,21 +13,42 @@ namespace Game
 
         private PackedScene packedLoadedScene = null;
 
-        [Signal]
-        public delegate void objectCreated();
-
-        public  void CreateChild(Node instance)
-        {
-              AddChild(instance);
-              EmitSignal(nameof(objectCreated));
-        }
         public override void _Ready()
         {
-            SetObjectPosition();
             SetObjectRotation();
+            SetObjectScale();
+            SetObjectPosition();
+
+            if (GetNodeOrNull("label") != null && worldObject != null)
+                GetNode("label").Call("set_text", worldObject.modelName + " - " + worldObject.Id);
         }
 
-      
+        public void disableLoding()
+        {
+            findLods(this);
+        }
+
+        private void findLods(Node n)
+        {
+            foreach (var item in n.GetChildren())
+            {
+                if (item is Node)
+                {
+                    if ((item as Node).GetChildCount() > 0)
+                    {
+                        findLods(item as Node);
+                    }
+                }
+
+                if (item is MeshLod)
+                {
+                    (item as MeshLod).enableLoding = false;
+                }
+
+            }
+        }
+
+
         public Node holdedObject = null;
 
         public string getUniqIdent()
@@ -47,70 +68,63 @@ namespace Game
             Rotation = worldObject.GetRotation();
         }
 
-        private bool LoadScene(string path)
+        public void SetObjectScale()
         {
-            if (!ResourceLoader.Exists(path))
-            {
-                GD.PrintErr("[Spawner] Cant find: " + worldObject.modelName);
-                return false;
-            }
+            Scale = worldObject.GetScale();
+        }
 
-            var scene = (PackedScene)ResourceLoader.Load(path);
+        public bool CreateScene(Resource res)
+        {
+            var scene = (PackedScene)res;
 
             if (worldObject.type == WorldObjectType.PROPERTY)
             {
-                holdedObject = (Spatial)scene.Instance();
-                CallDeferred("CreateChild", holdedObject);
+                var loadedScene = (Spatial)scene.Instance();
+                loadedScene.Translation = Vector3.Zero;
+                loadedScene.Rotation = Vector3.Zero;
+                loadedScene.Scale = new Vector3(1, 1, 1);
+                holdedObject = loadedScene;
+                CallDeferred("add_child", holdedObject);
             }
             else if (worldObject.type == WorldObjectType.VEHICLE)
             {
-                holdedObject = (Vehicle)scene.Instance();
-                CallDeferred("CreateChild", holdedObject);
+                var loadedScene = (Vehicle)scene.Instance();
+                loadedScene.Translation = Vector3.Zero;
+                loadedScene.Rotation = Vector3.Zero;
+                loadedScene.Scale = new Vector3(1, 1, 1);
+                holdedObject = loadedScene;
+
+                CallDeferred("add_child", holdedObject);
             }
             else if (worldObject.type == WorldObjectType.MARKER)
             {
-                holdedObject = (Spatial)scene.Instance();
-                CallDeferred("CreateChild", holdedObject);
+                var loadedScene = (Spatial)scene.Instance();
+                loadedScene.Translation = Vector3.Zero;
+                loadedScene.Rotation = Vector3.Zero;
+                loadedScene.Scale = new Vector3(1, 1, 1);
+                holdedObject = loadedScene;
+
+                CallDeferred("add_child", holdedObject);
             }
             else if (worldObject.type == WorldObjectType.SYSTEM)
             {
-                holdedObject = (Spatial)scene.Instance();
-                CallDeferred("CreateChild", holdedObject);
+
+                var loadedScene = (Spatial)scene.Instance();
+                loadedScene.Translation = Vector3.Zero;
+                loadedScene.Rotation = Vector3.Zero;
+                loadedScene.Scale = new Vector3(1, 1, 1);
+                holdedObject = loadedScene;
+
+                CallDeferred("add_child", holdedObject);
+            }
+            else
+            {
+                return false;
             }
 
             return true;
         }
 
-
-        public bool LoadObjectByFilePath()
-        {
-            if (worldObject.type == WorldObjectType.PROPERTY)
-            {
-                return LoadScene("res://objects/" + worldObject.modelName + ".tscn");
-
-            }
-            else if (worldObject.type == WorldObjectType.VEHICLE)
-            {
-                return LoadScene("res://vehicles/" + worldObject.modelName + ".tscn");
-
-            }
-            else if (worldObject.type == WorldObjectType.SYSTEM)
-            {
-                return LoadScene("res://" + worldObject.modelName + ".tscn");
-
-            }
-            else if (worldObject.type == WorldObjectType.MARKER)
-            {
-                return LoadScene("res://utils/world/objects/marker/marker.tscn");
-            }
-            else
-            {
-                GD.PrintErr("[Spawner] Cant find type: " + worldObject.type.ToString());
-                return false;
-            }
-
-
-        }
     }
 }
 

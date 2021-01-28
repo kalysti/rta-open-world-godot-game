@@ -1,123 +1,125 @@
 using Godot;
 using System.Collections.Generic;
-
+using System.Linq;
 namespace Game
 {
     public class ObjectSpawnerBase : Spatial
     {
+        [Signal]
+        public delegate void objectsCreated();
+        public BackgroundLoader backgroundLoader = null;
 
-        protected Queue<WorldObject> _spawnQueue = new Queue<WorldObject>();
-        protected Queue<WorldObjectNode> _nodeToDelete = new Queue<WorldObjectNode>();
+        protected List<WorldObject> tempObjects = new List<WorldObject>();
 
-        protected System.Threading.Thread spawnThread;
+        protected Queue<WorldObjectNode> createChildsQueue = new Queue<WorldObjectNode>();
+        protected Queue<WorldObjectNode> deleteChildsQueue = new Queue<WorldObjectNode>();
 
-        protected bool spawnThreadRunning = true;
+        protected List<WorldObject> creationInProgress = new List<WorldObject>();
 
-        protected Mutex mut = new Mutex();
+        public List<WorldObject> allObjects()
+        {
+            return tempObjects;
+        }
+
+        protected List<WorldObject> findObjectsInNearOfPlayer(NetworkPlayer player, float distance)
+        {
+            return tempObjects.Where(tf => tf.GetPosition().DistanceTo(player.GetPlayerPosition()) <= distance).ToList();
+        }
+
+        protected List<WorldObject> findObjectsByPosition(Vector3 playerPos, float distance)
+        {
+            return tempObjects.Where(tf => tf.GetPosition().DistanceTo(playerPos) <= distance).ToList();
+        }
+
+        public int objectsDrawin
+        {
+            get
+            {
+                return GetChildCount();
+            }
+        }
+
+        public int totalObjects
+        {
+            get
+            {
+                return tempObjects.Count;
+            }
+        }
 
         [Export]
-        public float ObjectDistance = 100.0f;
-        public Player player = null;
+        public float ObjectDistance = 500.0f;
 
-
-        public override void _ExitTree()
-        {
-            base._ExitTree();
-
-            spawnThreadRunning = false;
-            if (spawnThread != null)
-                spawnThread.Abort();
-        }
-
-        public void SetPlayer(Player _p)
-        {
-            player = _p;
-        }
         public override void _Ready()
         {
-            base._Ready();
-
-            spawnThread = new System.Threading.Thread(queueSyncThread);
-            spawnThread.Start();
+            backgroundLoader = GetTree().Root.GetNode("BackgroundLoader") as BackgroundLoader;
         }
 
-
-        public void queueSyncThread()
+        public override void _Process(float delta)
         {
-            while (spawnThreadRunning)
+            if (deleteChildsQueue.Count > 0)
             {
-                mut.Lock();
-
-                while (_spawnQueue.Count > 0)
+                try
                 {
-                    var newObj = _spawnQueue.Dequeue();
-                    SpawnObject(newObj);
+                    var child = deleteChildsQueue.Dequeue();
+                    child.QueueFree();
                 }
-
-                while (_nodeToDelete.Count > 0)
+                catch
                 {
-                    var obj = _nodeToDelete.Dequeue();
 
-                    if (obj.worldObject != null && obj.worldObject.type == WorldObjectType.VEHICLE && obj.holdedObject != null)
+                }
+            }
+
+            if (createChildsQueue.Count > 0)
+            {
+                var child = createChildsQueue.Dequeue();
+                if (child != null)
+                {
+                    var exist = GetNodeOrNull(child.worldObject.Id.ToString()) != null ? true : false;
+
+                    if (!exist)
                     {
-                        if (player != null && player.vehicle != null && player.vehicle == obj.holdedObject)
-                        {
-                            //do nothing in case its the vehicle of the player
-                        }
-                        else
-                        {
-                            obj.QueueFree();
-                        }
-                    }
-                    else
-                    {
-                        obj.QueueFree();
+                        CallDeferred("add_child", child);
+                        child.CallDeferred("set_visible", true);
                     }
                 }
-                mut.Unlock();
-
-                //wait before call nex time
-                System.Threading.Thread.Sleep(100);
             }
         }
 
-        public WorldObjectNode SpawnObject(WorldObject spawn)
+        public void CreateWorldObject(WorldObject item)
         {
-            try
+            if (!creationInProgress.Contains(item))
             {
-                var node = new WorldObjectNode();
-                node.worldObject = spawn;
-                node.Name = spawn.Id.ToString();
-
-                bool result = node.LoadObjectByFilePath();
-                node.Visible = false;
-
-                var arr = new Godot.Collections.Array();
-                arr.Add(node);
-                arr.Add(result);
-                
-                if (result)
+                var exist = GetNodeOrNull(item.Id.ToString()) != null ? true : false;
+                if (!string.IsNullOrEmpty(item.getResourcePath()) && !exist)
                 {
-                    CallDeferred("add_child", node);
-                    node.CallDeferred("set_visible", true);
-
-                    return node;
+                    var bgLoader = new BackgroundLoaderObjectItem(item);
+                    bgLoader.OnLoaderComplete += onWorldObjectLoaded;
+                    backgroundLoader.Load(bgLoader);
                 }
-                else
-                    return null;
             }
-            catch
+        }
+        protected void onWorldObjectLoaded(Resource resource, WorldObject worldObject)
+        {
+            var scene = GD.Load<PackedScene>("res://utils/world/objects/WorldObjectNode.tscn");
+            var node = (WorldObjectNode)scene.Instance();
+            
+            node.worldObject = worldObject;
+            node.Visible = false;
+            node.Name = worldObject.Id.ToString();
+
+            if (node.CreateScene(resource))
             {
-                return null;
+                creationInProgress.Remove(worldObject);
+                createChildsQueue.Enqueue(node);
             }
         }
 
-
-        protected void clearMapObjects()
+        public void clearMapObjects(BaseMap map)
         {
             GD.Print("[Server/Client] Clear exist scenes");
 
-            foreach (var item in GetParent().GetNode("map_holder/map").GetChildren())
+            foreach (var item in map.GetChildren())
             {
                 if (item is RoadGridMap || item is VegetationSpawner)
                 {
@@ -126,6 +128,13 @@ namespace Game
             }
         }
 
+        public override void _ExitTree()
+        {
+            if (createChildsQueue.Count > 0)
+                createChildsQueue.Clear();
 
+            if (deleteChildsQueue.Count > 0)
+                deleteChildsQueue.Clear();
+        }
     }
 }

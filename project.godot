@@ -9,6 +9,11 @@
 config_version=4
 
 _global_script_classes=[ {
+"base": "Reference",
+"class": "ArrayUtils",
+"language": "GDScript",
+"path": "res://addons/SIsilicon.3d.text/array_utils.gd"
+}, {
 "base": "",
 "class": "GitAPI",
 "language": "NativeScript",
@@ -25,6 +30,7 @@ _global_script_classes=[ {
 "path": "res://addons/zylann.hterrain/hterrain_resource_saver.gd"
 } ]
 _global_script_class_icons={
+"ArrayUtils": "",
 "GitAPI": "",
 "HTerrainDataLoader": "",
 "HTerrainDataSaver": ""
@@ -41,10 +47,16 @@ boot_splash/fullsize=false
 boot_splash/bg_color=Color( 0.105882, 0.105882, 0.105882, 1 )
 config/icon="res://logo.png"
 
+[audio]
+
+enable_audio_input=true
+
 [autoload]
 
 CharEditGlobal="*res://utils/character/CharEditGlobal.cs"
 UserSettings="*res://utils/client/Settings/UserSettings.cs"
+BackgroundLoader="*res://utils/loader/BackgroundLoader.cs"
+HTerrainThreadFix="*res://fixes/HTerrainThreadFix.gd"
 
 [display]
 
@@ -55,7 +67,7 @@ window/vsync/use_vsync=false
 
 [editor_plugins]
 
-enabled=PoolStringArray( "godot_game_tools", "road_editor", "vegetation_spawner", "zylann.hterrain" )
+enabled=PoolStringArray( "SIsilicon.3d.text", "footsteps", "godot_game_tools", "mesh_lod", "road_editor", "vegetation_spawner", "zylann.hterrain" )
 
 [gdnative]
 
@@ -148,7 +160,6 @@ profiler/enabled=true
 
 [physics]
 
-3d/active_soft_world=false
 2d/default_gravity=90
 
 [rendering]

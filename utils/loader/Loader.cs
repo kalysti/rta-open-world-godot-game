@@ -8,6 +8,7 @@ namespace Game.Loader
 
         public override void _Ready()
         {
+    
             string[] args = OS.GetCmdlineArgs();
 
             Core.isServer = Array.Exists(args, element => element == "server");
@@ -17,9 +18,9 @@ namespace Game.Loader
                 Core.isDebug = Array.Exists(args, element => element == "debug");
             else
             {
-                var p =  Array.Exists(args, element => element == "no-debug");
+                var p = Array.Exists(args, element => element == "no-debug");
 
-                if(p)
+                if (p)
                 {
                     Core.isDebug = false;
                 }

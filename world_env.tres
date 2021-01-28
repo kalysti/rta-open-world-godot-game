@@ -3,27 +3,25 @@
 [sub_resource type="ViewportTexture" id=1]
 
 [sub_resource type="PanoramaSky" id=2]
-resource_local_to_scene = true
 panorama = SubResource( 1 )
 
 [resource]
 background_mode = 2
 background_sky = SubResource( 2 )
 background_color = Color( 1, 1, 1, 1 )
-background_energy = 1.28
+ambient_light_energy = 1.78
+ambient_light_sky_contribution = 0.26
 fog_enabled = true
-fog_height_min = -173.4
+fog_depth_end = 436.6
+tonemap_mode = 3
 auto_exposure_scale = 6.74
 auto_exposure_min_luma = 0.0
 auto_exposure_max_luma = 5.92
 auto_exposure_speed = 2.66
-ss_reflections_enabled = true
 ssao_enabled = true
-dof_blur_far_distance = 3500.0
 dof_blur_far_amount = 0.02
 glow_intensity = 1.46
 glow_strength = 0.71
 glow_bloom = 0.11
 glow_blend_mode = 0
-adjustment_enabled = true
-adjustment_saturation = 1.2
+adjustment_saturation = 1.6

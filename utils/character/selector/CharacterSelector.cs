@@ -13,7 +13,7 @@ public class CharacterSelector : Control
     public string hostname = "localhost";
 
     [Export]
-    public int port = 27021;
+    public int port = 27015;
 
     [Export]
     public NodePath holderPath;
@@ -127,7 +127,7 @@ public class CharacterSelector : Control
     {
         try
         {
-            var restClient = new RestClient.Net.Client(new RestClient.Net.NewtonsoftSerializationAdapter(), new Uri("http://" + hostname + ":" + port + "/api/deleteCharacter/" + id));
+            var restClient = new RestClient.Net.Client(new RestClient.Net.NewtonsoftSerializationAdapter(), new Uri("http://" + hostname + ":" + (port+1 )+ "/api/deleteCharacter/" + id));
             restClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + accessToken);
 
             CharDeleteMessage response = await restClient.GetAsync<CharDeleteMessage>();
@@ -170,7 +170,7 @@ public class CharacterSelector : Control
     {
         try
         {
-            var restClient = new RestClient.Net.Client(new RestClient.Net.NewtonsoftSerializationAdapter(), new Uri("http://" + hostname + ":" + port + "/api/characters"));
+            var restClient = new RestClient.Net.Client(new RestClient.Net.NewtonsoftSerializationAdapter(), new Uri("http://" + hostname + ":" + (port+1) + "/api/characters"));
             restClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + accessToken);
 
             CharReponseList response = await restClient.GetAsync<CharReponseList>();

@@ -121,7 +121,6 @@ namespace Game
                 if (newInput != null)
                 {
                     lastInput = ProcessInput(newInput, lastInput, delta);
-
                     character.ProcessAnimation(playerState, newInput, delta);
                 }
             }
@@ -409,8 +408,6 @@ namespace Game
                 rot.x = Mathf.Deg2Rad(-90f);
 
                 shape.Rotation = rot;
-
-
 
                 vehicle.driver = null;
                 vehicle = null;

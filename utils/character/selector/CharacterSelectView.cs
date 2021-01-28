@@ -19,6 +19,7 @@ namespace Game
 
         public override void _Process(float delta)
         {
+            return;
             var node = GetNodeOrNull("viewport_container/char_viewport/char");
             if (node != null)
                 (node as NetworkPlayerChar).doCatwalk();

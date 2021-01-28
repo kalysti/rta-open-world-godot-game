@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/footsteps carpet 5.wav-f07b3c3e3129bbc5f1de788972e58e35.sample"
+
+[deps]
+
+source_file="res://audio/character/footsteps/carpet/footsteps carpet 5.wav"
+dest_files=[ "res://.import/footsteps carpet 5.wav-f07b3c3e3129bbc5f1de788972e58e35.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0

@@ -12,9 +12,15 @@ public class RoadGridMap : Spatial
     public override void _EnterTree()
     {
         base._EnterTree();
-        GD.Print("on road map enter");
-        map = new GridMap();
 
-        AddChild(map);
+        if (!Engine.EditorHint)
+            Visible = false;
+        else
+        {
+            base._EnterTree();
+            map = new GridMap();
+
+            AddChild(map);
+        }
     }
 }

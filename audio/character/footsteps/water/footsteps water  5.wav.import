@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/footsteps water  5.wav-620db6237b75a723947f84a9234d0d04.sample"
+
+[deps]
+
+source_file="res://audio/character/footsteps/water/footsteps water  5.wav"
+dest_files=[ "res://.import/footsteps water  5.wav-620db6237b75a723947f84a9234d0d04.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0

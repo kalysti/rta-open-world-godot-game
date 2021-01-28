@@ -11,17 +11,19 @@ namespace Game.Rcon
     public class RconServer : Node
     {
         [Export]
-        public int port = 27015;
+        public int port = 27020;
+        [Export]
+        public string password = "test";
 
         public RemoteConServer server;
 
         public override void _Ready()
         {
-            var server = new RemoteConServer(IPAddress.Any, port)
+            server = new RemoteConServer(IPAddress.Any, port)
             {
                 SendAuthImmediately = true,
                 Debug = true,
-                Password = "test"
+                Password = password
             };
 
             server.CommandManager.Add("players", "Player list", (command, arguments) =>
@@ -50,5 +52,11 @@ namespace Game.Rcon
             server.StartListening();
 
         }
+        public override void _ExitTree()
+        {
+            if (server != null)
+                server.StopListening();
+        }
+
     }
 }

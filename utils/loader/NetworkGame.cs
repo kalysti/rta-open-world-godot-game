@@ -9,7 +9,6 @@ namespace Game.Loader
 
         public void InitNetwork()
         {
-
             CustomMultiplayer = new MultiplayerAPI();
             CustomMultiplayer.SetRootNode(this);
 
@@ -27,14 +26,11 @@ namespace Game.Loader
                 CustomMultiplayer.Poll();
             }
         }
-
-
         private void onNodeUpdate(Node node)
         {
 
             var path = node.GetPath().ToString();
             var mypath = GetPath().ToString();
-
 
             if (!path.Contains(mypath))
             {
@@ -51,12 +47,10 @@ namespace Game.Loader
 
         public override void _Notification(int what)
         {
-
             if (what == NotificationExitTree)
             {
                 GetTree().Disconnect("node_added", this, "onNodeUpdate");
             }
-
         }
 
         private void customizeChildren(Node _node)

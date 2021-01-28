@@ -11,6 +11,15 @@ It is entirely built on top of the `VisualServer` scripting API, which means it 
 ![Screenshot of the editor with the plugin enabled and arrows showing where UIs are](images/overview.png)
 
 
+### Video tutorials
+
+This written doc should be the most up to date and precise information, but video tutorials exist for a quick start.
+
+- [Kasper's tutorial](https://www.youtube.com/watch?v=Af1f2JPvSIs) about version 1.5.2 (16 Jan 2021)
+- [GamesFromScratch presentation](https://www.youtube.com/watch?v=jYVO0-_sXZs), also featuring the [WaterWays](https://github.com/Arnklit/WaterGenGodot) plugin (23 dec 2020)
+- [qubodupDev's Tutorial](https://www.youtube.com/watch?v=k_ISq6JyVSs) about version 1.3.3 (27 aug 2020)
+- [Old tutorial](https://www.youtube.com/watch?v=eZuvfIHDeT4&) about version 0.8 (10 aug 2018! A lot is outdated in it but let's keep it here for the record)
+
 ### How to install
 
 You will need to use Godot 3.1 or later. It is best to use latest stable 3.x version (Godot 4 is not supported yet).
@@ -90,7 +99,7 @@ Sculpting
 
 ### Brush types
 
-The default terrain is flat, but you may want to create hills and mountains. Because it uses a heightmap, editing this terrain is equivalent to editing an image. Because of this, the main tool is a brush with a configurable size and shape. You can see which area will be affected inside a 3D red circle appearing under your mouse, and you can choose how strong painting is by changing the `strength` slider.
+The default terrain is flat, but you may want to create hills and mountains. Because it uses a heightmap, editing this terrain is equivalent to editing an image. Because of this, the main tool is a brush with a configurable size and shape. You can see which area will be affected inside a 3D red circle appearing under your mouse, and you can choose how strong painting is by changing the `Brush opacity` slider.
 
 ![Screenshot of the brush widget](images/brush_editor.png)
 
@@ -180,7 +189,8 @@ This magic is done with a single shader, i.e a single `ShaderMaterial` in Godot'
 There are mainly 3 families of shaders this plugin supports:
 
 - `CLASSIC4`: simple shaders where each texture may be a separate resource. They are limited to 4 textures.
-- `ARRAY`: more modern shader using texture arrays, which comes with a few constraints, but allows to paint a lot more different textures.
+- `MULTISPLAT16`: more advanced shader using more splatmaps and texture arrays. It's expensive but supports up to 16 textures.
+- `ARRAY`: experimental shader also using texture arrays, which comes with constraints, but allows to paint a lot more different textures.
 - Other shaders don't need textures, like `LOW_POLY`, which only uses colors.
 
 On the `HTerrain` node, there is a property called `shader_type`, which lets you choose among built-in shaders. The one you choose will define which workflow to follow: textures, or texture arrays.
@@ -204,6 +214,8 @@ For each texture, you may find the following types of images, common in PBR shad
 ![Screenshot of PBR textures](images/pbr_textures.png)
 
 You can find some of these textures for free at [cc0textures.com](http://cc0textures.com).
+
+!!! note: Some shaders have a `Lite` and non-lite versions. One main difference between them is that `Lite` versions don't require normal maps, but the others require them. If you use a non-lite shader and forget to assign normal maps, shading will look wrong.
 
 It is preferable to place those source images under a specific directory. Also, since the images will only serve as an input to generate the actual game resources, it is better to place a `.gdignore` file inside that directory. This way, Godot will not include those source files in the exported game:
 
@@ -349,7 +361,7 @@ The `CLASSIC4` shader is a simple splatmap technique, where R, G, B, A match the
 
 It comes in two variants:
 
-- `CLASSIC4`: full-featured shader, however it requires your textures to have normal maps.
+- `CLASSIC4`: full-featured shader, however it requires your textures to have normal maps. If you don't assign them, shading will look wrong.
 - `CLASSIC4_LITE`: simpler shader with less features. It only requires albedo textures.
 
 
@@ -362,7 +374,7 @@ It also comes in two variants:
 - `MULTISPLAT16`: full-featured shader, however it requires your texture arrays to have normal maps.
 - `MULTISPLAT16_LITE`: simpler shader with less features. It only requires albedo texture arrays.
 
-It is the recommended choice if you need more than 4 textures, because it is much easier to use than the `ARRAY` shader and has produces less artifacts.
+It is the recommended choice if you need more than 4 textures, because it is much easier to use than the `ARRAY` shader and produces less artifacts.
 
 One downside is performance: it is about twice slower than `CLASSIC4` (on an nVidia 1060, a fullscreen `CLASSIC4` is 0.8 ms, while `MULTISPLAT16` is 1.8 ms).
 Although, considering objects placed on the terrain should usually occlude ground pixels, the cost might be lower in a real game scenario.

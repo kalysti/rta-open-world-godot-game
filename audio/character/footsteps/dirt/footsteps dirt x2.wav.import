@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/footsteps dirt x2.wav-53988341143f741640cc93f9e7c5f7ca.sample"
+
+[deps]
+
+source_file="res://audio/character/footsteps/dirt/footsteps dirt x2.wav"
+dest_files=[ "res://.import/footsteps dirt x2.wav-53988341143f741640cc93f9e7c5f7ca.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0

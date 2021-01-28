@@ -68,7 +68,6 @@ public class CustomVegetation : EditorPlugin
     }
 
 
-
     public override void _PhysicsProcess(float delta)
     {
         if (vegGrid == null)

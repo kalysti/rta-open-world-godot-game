@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/footsteps gravel 12.wav-6a71482e181dbd1bfb4eb597a6801255.sample"
+
+[deps]
+
+source_file="res://audio/character/footsteps/gravel/footsteps gravel 12.wav"
+dest_files=[ "res://.import/footsteps gravel 12.wav-6a71482e181dbd1bfb4eb597a6801255.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0
