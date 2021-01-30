@@ -110,87 +110,73 @@ namespace Game
 
             if (currentObjectName != item)
             {
-                var thread = new System.Threading.Thread(new ThreadStart(() => showObject(item)));
-                thread.Start();
-
                 currentObjectName = item;
+                showObject(item, WorldObjectType.PROPERTY);
             }
         }
+
         public void onVehicleSelected(int selected)
         {
             var item = vehicleList.GetItemText(selected);
 
-            if (currentVehicleName != item)
+            if (currentObjectName != item)
             {
-                var thread = new System.Threading.Thread(new ThreadStart(() => showVehicle(item)));
-                thread.Start();
-
-                currentVehicleName = item;
+                currentObjectName = item;
+                showObject(item, WorldObjectType.VEHICLE);
             }
         }
 
-        private void showVehicle(string name)
+        private void showObject(string name, WorldObjectType type)
         {
-            var oldObject = FindNode("car_camera_viewport");
+            var wo = new WorldObject
+            {
+                type = type,
+                modelName = name,
+            };
+
+            wo.SetScale(new Vector3(1, 1, 1));
+            var loader = new BackgroundLoaderObjectItem(wo);
+
+            loader.OnLoaderComplete += OnShowObjectIsReady;
+            backgroundLoader.Load(loader);
+        }
+
+        public void OnShowObjectIsReady(Resource resource, WorldObject worldObject)
+        {
+
+            var oldObject = FindNode("object_holder");
             if (oldObject != null)
             {
                 foreach (var x in oldObject.GetChildren())
                 {
-                    (x as Node).QueueFree();
+                    oldObject.RemoveChild(x as Node);
                 }
             }
 
-            if (!ResourceLoader.Exists("res://vehicles/" + name + ".tscn"))
-            {
-                GD.PrintErr("[Spawner] Cant find: " + name);
-            }
-            else
-            {
-                var nodeScene = (PackedScene)ResourceLoader.Load("res://vehicles/" + name + ".tscn");
-                var spat = (Vehicle)nodeScene.Instance();
-                spat.Name = "vehicle_holder";
-                spat.GravityScale = 0;
+            var scene = GD.Load<PackedScene>("res://utils/world/objects/WorldObjectNode.tscn");
+            var node = (WorldObjectNode)scene.Instance();
+            node.enableLoding = false;
+            node.worldObject = worldObject;
+            node.Visible = true;
+            node.Name = worldObject.Id.ToString();
 
-                FindNode("car_camera_viewport").CallDeferred("add_child", spat);
-            }
+            var arr = new Godot.Collections.Array();
+            arr.Add(node);
 
-        }
+            node.Connect("ObjectCreated", this, "previewObjectGenerated", arr);
 
-        private void showObject(string name)
-        {
-            var oldObject = FindNode("camera_viewport");
-            if (oldObject != null)
+            if (node.CreateScene(resource))
             {
-                foreach (var x in oldObject.GetChildren())
-                {
-                    (x as Node).QueueFree();
-                }
-            }
-
-            if (!ResourceLoader.Exists("res://objects/" + name + ".tscn"))
-            {
-                GD.PrintErr("[Spawner] Cant find: " + name);
-            }
-            else
-            {
-                var nodeScene = (PackedScene)ResourceLoader.Load("res://objects/" + name + ".tscn");
-                var spat = (Spatial)nodeScene.Instance();
-                spat.Name = "object_holder";
-                FindNode("camera_viewport").CallDeferred("add_child", spat);
+                FindNode("object_holder").CallDeferred("add_child", node);
             }
         }
 
-
-        public void addVehicle()
+        public void previewObjectGenerated(WorldObjectNode node)
         {
-            foreach (var i in vehicleList.GetSelectedItems())
+            if(node.holdedObject is Vehicle)
             {
-                var item = vehicleList.GetItemText(i);
-                dialog.Hide();
-                DrawVehicle(item);
-                Input.SetMouseMode(Input.MouseMode.Captured);
-
-                break;
+                (node.holdedObject as Vehicle).GravityScale = 0;
+                (node.holdedObject as Vehicle).Mode = RigidBody.ModeEnum.Static;
             }
         }
 
@@ -200,7 +186,20 @@ namespace Game
             {
                 var item = objectList.GetItemText(i);
                 dialog.Hide();
-                DrawObject(item);
+                DrawObject(item, WorldObjectType.PROPERTY);
+                Input.SetMouseMode(Input.MouseMode.Captured);
+
+                break;
+            }
+        }
+
+        public void addVehicle()
+        {
+            foreach (var i in vehicleList.GetSelectedItems())
+            {
+                var item = vehicleList.GetItemText(i);
+                dialog.Hide();
+                DrawObject(item, WorldObjectType.VEHICLE);
                 Input.SetMouseMode(Input.MouseMode.Captured);
 
                 break;
@@ -208,15 +207,15 @@ namespace Game
         }
 
         private bool objectLoaded = false;
-        private void CreateException()
+       private void CreateException()
         {
             if (newWorldObject != null)
             {
+                previewObjectGenerated(newWorldObject);
                 AddException(newWorldObject);
                 objectLoaded = true;
             }
         }
-
         private void AddException(Node newWorldObject)
         {
             foreach (var child in newWorldObject.GetChildren())
@@ -311,7 +310,7 @@ namespace Game
             dir.ListDirEnd();
             return files;
         }
-        private void DrawObject(string modelName)
+        private void DrawObject(string modelName, Game.WorldObjectType type)
         {
             if (newWorldObject != null)
                 return;
@@ -320,60 +319,31 @@ namespace Game
 
             var obj = new Game.WorldObject
             {
-                type = Game.WorldObjectType.PROPERTY,
+                type = type,
                 modelName = modelName
             };
 
             var bgloader = new BackgroundLoaderObjectItem(obj);
-            bgloader.OnLoaderComplete += objectCreated;
+            bgloader.OnLoaderComplete += onDrawObjectFinish;
             backgroundLoader.Load(bgloader);
         }
-
-        private void DrawVehicle(string modelName)
-        {
-            if (newWorldObject != null)
-                return;
-
-            newWorldObject = new Game.WorldObjectNode
-            {
-                worldObject = new Game.WorldObject
-                {
-                    type = Game.WorldObjectType.VEHICLE,
-                    modelName = modelName
-                }
-            };
-
-            newWorldObject.Name = "temp_object";
-            saveObject = false;
-            world.AddChild(newWorldObject);
-            newWorldObject.disableLoding();
-            CreateException();
-
-            // newWorldObject.LoadObjectByFilePath();
-
-        }
-
-        public void objectCreated(Resource res, WorldObject obj)
+        public void onDrawObjectFinish(Resource res, WorldObject obj)
         {
             newWorldObject = new Game.WorldObjectNode
             {
-                worldObject = new Game.WorldObject
-                {
-                    type = Game.WorldObjectType.PROPERTY,
-                    modelName = obj.modelName
-                }
+                worldObject = obj
             };
 
-            newWorldObject.CreateScene(res);
+            newWorldObject.enableLoding = false;
+            newWorldObject.Visible = false;
+            newWorldObject.Connect("ObjectCreated", this, "CreateException");
+            newWorldObject.CreateScene(res, true);
             newWorldObject.Name = "temp_object";
-
+            
             saveObject = false;
-
             world.AddChild(newWorldObject);
-            newWorldObject.disableLoding();
-
+            
             objectLoaded = true;
-            AddException(newWorldObject);
         }
 
         public override void _Input(InputEvent @event)
@@ -455,7 +425,6 @@ namespace Game
                         gt.origin = player.rayDrag.GetCollisionPoint();
                         newWorldObject.GlobalTransform = gt;
                         newWorldObject.Visible = true;
-
                         saveObject = true;
 
                         return;

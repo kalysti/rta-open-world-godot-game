@@ -11,6 +11,9 @@ namespace Game
         [Export]
         public NodePath objectSpawnerPath;
 
+        [Export]
+        public string mapPath = "res://maps/TestMapDev.tscn"; // res://maps/TestMap.tscn
+
         [Signal]
         public delegate void mapLoaded();
 
@@ -26,7 +29,7 @@ namespace Game
         }
         public void LoadMap()
         {
-            var loadingElement = new BackgroundLoaderItem("res://maps/TestMap.tscn");
+            var loadingElement = new BackgroundLoaderItem(mapPath);
             loadingElement.Connect("CompleteLoadEvent", this, "InitMap");
             backgroundLoader.Load(loadingElement);
         }

@@ -18,6 +18,10 @@ namespace Game
         public Player player = null;
 
         [Export]
+        public string mapScenePath = "res://maps/TestMapDev.tscn"; // res://maps/TestMap.tscn
+
+
+        [Export]
         public NodePath mapPath;
 
         public BaseMap map = null;
@@ -35,7 +39,7 @@ namespace Game
 
         public void LoadMap()
         {
-            var loadingElement = new BackgroundLoaderItem("res://maps/TestMap.tscn");
+            var loadingElement = new BackgroundLoaderItem(mapScenePath);
             loadingElement.Connect("CompleteLoadEvent", this, "InitMap");
             backgroundLoader.Load(loadingElement);
         }

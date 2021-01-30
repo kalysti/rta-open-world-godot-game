@@ -12,6 +12,9 @@ namespace Game
 {
     public class Server : NetworkGame
     {
+        [Signal]
+        public delegate void onServerIsReady();
+
         [Export]
         public float MAX_DISTANCE = 45.0f;
 
@@ -34,6 +37,7 @@ namespace Game
 
         [Export]
         public string currentMap = "level";
+
         public static SQLiteConnection database;
 
         [Export]
@@ -63,13 +67,20 @@ namespace Game
             restServer = new RestServer((port + 1).ToString());
         }
 
+        public void serverIsReadyUp()
+        {
+            GD.Print("[Server] Is ready up");
+            EmitSignal(nameof(onServerIsReady));
+        }
+
+
         public override void _ExitTree()
         {
             if (restServer != null)
             {
                 restServer.Close();
             }
-            
+
             if (database != null)
                 database.Close();
         }
@@ -77,6 +88,8 @@ namespace Game
         public override void _Ready()
         {
             InitNetwork();
+
+            FindNode("world").Connect("mapLoaded", this, "serverIsReadyUp");
 
             spawner = (ObjectSpawnerServer)GetNode(objectSpawnerPath);
             spawner.CustomMultiplayer = spawner.CustomMultiplayer;
@@ -164,7 +177,7 @@ namespace Game
             var id = Multiplayer.GetRpcSenderId();
             GD.Print("[Server][" + id + "] Player world loaded completly.");
             var objects = spawner.allObjects();
-            
+
             //send object list
             RpcId(id, "InitObjectList", Game.Networking.NetworkCompressor.Compress(objects));
         }

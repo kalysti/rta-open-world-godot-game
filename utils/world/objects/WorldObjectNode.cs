@@ -13,6 +13,17 @@ namespace Game
 
         private PackedScene packedLoadedScene = null;
 
+        [Export]
+        public bool enableLoding = true;
+
+        [Export]
+        public bool showName = false;
+
+        [Signal]
+        public delegate void ObjectCreated();
+
+
+
         public override void _Ready()
         {
             SetObjectRotation();
@@ -20,32 +31,38 @@ namespace Game
             SetObjectPosition();
 
             if (GetNodeOrNull("label") != null && worldObject != null)
+            {
                 GetNode("label").Call("set_text", worldObject.modelName + " - " + worldObject.Id);
-        }
-
-        public void disableLoding()
-        {
-            findLods(this);
+                GetNode("label").Set("visible", showName);
+            }
         }
 
         private void findLods(Node n)
         {
             foreach (var item in n.GetChildren())
             {
-                if (item is Node)
+                if (item is MeshLod)
+                {
+                    (item as MeshLod).enableLoding = false;
+                }
+                else if (item is Node)
                 {
                     if ((item as Node).GetChildCount() > 0)
                     {
                         findLods(item as Node);
                     }
                 }
-
-                if (item is MeshLod)
-                {
-                    (item as MeshLod).enableLoding = false;
-                }
-
             }
+        }
+
+        public void AddObjectToScene(Node n)
+        {
+            if (!enableLoding)
+            {
+                findLods(n);
+            }
+            AddChild(n);
+            EmitSignal(nameof(ObjectCreated));
         }
 
 
@@ -73,7 +90,7 @@ namespace Game
             Scale = worldObject.GetScale();
         }
 
-        public bool CreateScene(Resource res)
+        public bool CreateScene(Resource res, bool setDefaultScale = false)
         {
             var scene = (PackedScene)res;
 
@@ -82,29 +99,53 @@ namespace Game
                 var loadedScene = (Spatial)scene.Instance();
                 loadedScene.Translation = Vector3.Zero;
                 loadedScene.Rotation = Vector3.Zero;
-                loadedScene.Scale = new Vector3(1, 1, 1);
+                if (!setDefaultScale)
+                    loadedScene.Scale = new Vector3(1, 1, 1);
+                else
+                {
+                    worldObject.SetScale(loadedScene.Scale);
+                    loadedScene.Scale = new Vector3(1, 1, 1);
+                    Scale = worldObject.GetScale();
+                }
                 holdedObject = loadedScene;
-                CallDeferred("add_child", holdedObject);
+
+                CallDeferred("AddObjectToScene", holdedObject);
             }
             else if (worldObject.type == WorldObjectType.VEHICLE)
             {
                 var loadedScene = (Vehicle)scene.Instance();
                 loadedScene.Translation = Vector3.Zero;
                 loadedScene.Rotation = Vector3.Zero;
-                loadedScene.Scale = new Vector3(1, 1, 1);
+                
+                if (!setDefaultScale)
+                    loadedScene.Scale = new Vector3(1, 1, 1);
+                else
+                {
+                    worldObject.SetScale(loadedScene.Scale);
+                    loadedScene.Scale = new Vector3(1, 1, 1);
+                    Scale = worldObject.GetScale();
+                }
+
                 holdedObject = loadedScene;
 
-                CallDeferred("add_child", holdedObject);
+                CallDeferred("AddObjectToScene", holdedObject);
             }
             else if (worldObject.type == WorldObjectType.MARKER)
             {
                 var loadedScene = (Spatial)scene.Instance();
                 loadedScene.Translation = Vector3.Zero;
                 loadedScene.Rotation = Vector3.Zero;
-                loadedScene.Scale = new Vector3(1, 1, 1);
+                if (!setDefaultScale)
+                    loadedScene.Scale = new Vector3(1, 1, 1);
+                else
+                {
+                    worldObject.SetScale(loadedScene.Scale);
+                    loadedScene.Scale = new Vector3(1, 1, 1);
+                    Scale = worldObject.GetScale();
+                }
                 holdedObject = loadedScene;
 
-                CallDeferred("add_child", holdedObject);
+                CallDeferred("AddObjectToScene", holdedObject);
             }
             else if (worldObject.type == WorldObjectType.SYSTEM)
             {
@@ -112,10 +153,17 @@ namespace Game
                 var loadedScene = (Spatial)scene.Instance();
                 loadedScene.Translation = Vector3.Zero;
                 loadedScene.Rotation = Vector3.Zero;
-                loadedScene.Scale = new Vector3(1, 1, 1);
+                if (!setDefaultScale)
+                    loadedScene.Scale = new Vector3(1, 1, 1);
+                else
+                {
+                    worldObject.SetScale(loadedScene.Scale);
+                    loadedScene.Scale = new Vector3(1, 1, 1);
+                    Scale = worldObject.GetScale();
+                }
                 holdedObject = loadedScene;
 
-                CallDeferred("add_child", holdedObject);
+                CallDeferred("AddObjectToScene", holdedObject);
             }
             else
             {

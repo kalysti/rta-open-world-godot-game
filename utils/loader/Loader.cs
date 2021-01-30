@@ -6,9 +6,11 @@ namespace Game.Loader
     public class Loader : Control
     {
 
+        public Client client = null;
+        public Server server = null;
         public override void _Ready()
         {
-    
+
             string[] args = OS.GetCmdlineArgs();
 
             Core.isServer = Array.Exists(args, element => element == "server");
@@ -39,14 +41,14 @@ namespace Game.Loader
             if (Core.isDebug)
                 Core.isClientAndServer = true;
 
-            if (Core.isServer || Core.isDebug)
-            {
-                startServer();
-            }
-
             if (!Core.isServer || Core.isDebug || (!Core.isServer && !Core.isDebug))
             {
                 startClient();
+            }
+
+            if (Core.isServer || Core.isDebug)
+            {
+                startServer();
             }
         }
 
@@ -58,10 +60,10 @@ namespace Game.Loader
 
             if (scene != null)
             {
-                var instance = scene.Instance();
-                instance.Name = "client";
+                client = (Client)scene.Instance();
+                client.Name = "client";
 
-                GetNode("vbox/vbox_client/client_viewport").AddChild(instance);
+                GetNode("vbox/vbox_client/client_viewport").AddChild(client);
             }
         }
 
@@ -89,9 +91,10 @@ namespace Game.Loader
 
             if (scene != null)
             {
-                var instance = scene.Instance();
-                instance.Name = "server";
-                GetNode("vbox/vbox_server/server_viewport").AddChild(instance);
+                server = (Server)scene.Instance();
+                server.Name = "server";
+                server.Connect("onServerIsReady", client, "doAutologin");
+                GetNode("vbox/vbox_server/server_viewport").AddChild(server);
             }
         }
     }

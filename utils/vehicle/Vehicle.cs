@@ -96,6 +96,7 @@ namespace Game
 
         public override void _PhysicsProcess(float delta)
         {
+            return;
 
             if (driver != null)
                 ProcessInput(delta);
@@ -108,6 +109,8 @@ namespace Game
 
         public override void _IntegrateForces(PhysicsDirectBodyState state)
         {
+            return;
+            
             if (driver != null)
             {
                 var charOffset = new Vector3(0, 0.5f, 0);

@@ -34,7 +34,16 @@ public class MeshLod : Spatial
 
         if (lod1 != null)
         {
-            lod1.Visible = false;
+            if (Engine.IsEditorHint())
+            {
+                lod1.Visible = true;
+            }
+            else
+            {
+                lod1.Visible = (enableLoding) ? false : true;
+
+            }
+
         }
 
         if (lod2 != null)
@@ -53,10 +62,6 @@ public class MeshLod : Spatial
     {
         if (ProjectSettings.HasSetting("lod/spatial_bias"))
             lod_bias = (float)ProjectSettings.GetSetting("lod/spatial_bias");
-
-        base._Ready();
-
-        doLoding();
 
         var random = new RandomNumberGenerator();
         random.Randomize();
@@ -171,7 +176,7 @@ public class MeshLod : Spatial
         var lod2 = GetNodeOrNull<MeshInstance>("lod2");
         var lod3 = GetNodeOrNull<MeshInstance>("lod3");
 
-        if (Engine.IsEditorHint())
+        if (Engine.IsEditorHint() || !enableLoding)
         {
             disableLod();
         }
@@ -187,15 +192,6 @@ public class MeshLod : Spatial
 
     public override void _Process(float delta)
     {
-        if (!enableLoding)
-        {
-            var lod1 = GetNodeOrNull<MeshInstance>("lod3");
-            
-            if (lod1 != null)
-                lod1.Visible = true;
-
-            return;
-        }
 
         if (timer <= refreshRate)
         {

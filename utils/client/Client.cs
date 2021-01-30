@@ -14,6 +14,9 @@ namespace Game
         [Export]
         public int port = 27015;
 
+        [Export]
+        public bool autoLogin = true;
+
         protected string accessToken = null;
 
         private int ownNetworkId = 0;
@@ -57,7 +60,20 @@ namespace Game
 
             AddChild(statsTimer);
             (GetNode("hud/menu/blur_bg") as Sprite).Visible = false;
+
+
         }
+
+        public void doAutologin()
+        {
+            if (autoLogin)
+            {
+                GD.Print("Do auto login");
+                accessToken = "VO4J72TZY8Y76DWKOE62PQJJPDPNB5Y3WNWAQJEE6I5GACVZMKNO47GPTN07NK546KYQSRD92THU8LMB";
+                ConnectToServer();
+            }
+        }
+        
         public override void _Process(float delta)
         {
             base._Process(delta);

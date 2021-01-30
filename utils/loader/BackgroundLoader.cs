@@ -121,8 +121,17 @@ public class BackgroundLoader : Node
             }
             else if (loadingQueue.Count > 0)
             {
-                currentLoader = loadingQueue.Dequeue();
-                currentLoader.loader = ResourceLoader.LoadInteractive(currentLoader.path);
+                var element = loadingQueue.Dequeue();
+
+                try
+                {
+                    currentLoader = element;
+                    currentLoader.loader = ResourceLoader.LoadInteractive(currentLoader.path);
+                }
+                catch
+                {
+                    currentLoader = null;
+                }
             }
 
             System.Threading.Thread.Sleep(50);
