@@ -113,6 +113,21 @@ namespace Game
                 p.QueueFree();
 
         }
+
+        public void saveCharacter(int charId, string charBody)
+        {
+            var id = Multiplayer.GetRpcSenderId();
+
+            GD.Print("[Server] Client " + id.ToString() + " save char.");
+            var _char = database.Table<OnlineCharacter>().Where(df => df.Id == charId).FirstOrDefault();
+
+            if (_char != null)
+            {
+                _char.body = charBody;
+                database.Update(_char);
+            }
+        }
+
         public void onPlayerConnect(int id)
         {
             GD.Print("[Server] Client " + id.ToString() + " connected.");
@@ -172,14 +187,23 @@ namespace Game
         }
 
         [Remote]
-        public void playerWorldLoaded()
+        public void playerWorldLoaded(int characterId)
         {
             var id = Multiplayer.GetRpcSenderId();
             GD.Print("[Server][" + id + "] Player world loaded completly.");
             var objects = spawner.allObjects();
 
+            //selectedCharId
+
+            var character = database.Table<OnlineCharacter>().Where(df => df.Id == characterId).FirstOrDefault();
+            if (character == null)
+            {
+                DisconnectClient(id, "Cant find character");
+                return;
+            }
+
             //send object list
-            RpcId(id, "InitObjectList", Game.Networking.NetworkCompressor.Compress(objects));
+            RpcId(id, "InitCharacter", Game.Networking.NetworkCompressor.Compress(objects), JsonConvert.SerializeObject(character));
         }
 
         [Remote]
@@ -219,6 +243,7 @@ namespace Game
             player.authId = authid;
             player.Visible = true;
             player.isInitalized = false;
+            player.world = GetNode<ServerWorld>("world");
 
             GetNode("world/players").AddChild(player);
             player.SetPlayerPosition((GetNode("world/map_holder/map") as BaseMap).GetSpawnPoint());

@@ -7,5 +7,6 @@ bin/
 build/
 level/
 lib/
-
+git_api.gdnlib
+git_api.gdns
 .readthedocs.yml

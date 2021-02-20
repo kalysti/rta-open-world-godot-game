@@ -76,8 +76,6 @@ namespace Game
             };
         }
 
-
-
         [Puppet]
         public void OnServerSnapshot(string correctedSnapshotJson)
         {

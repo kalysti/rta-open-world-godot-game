@@ -6,6 +6,7 @@ using RestClient.Net;
 using RestClient.Net.Abstractions;
 using Game;
 using System.Linq;
+using Newtonsoft.Json;
 
 public class CharacterSelector : Control
 {
@@ -29,6 +30,7 @@ public class CharacterSelector : Control
 
     [Signal]
     public delegate void onSelect(int id);
+
 
     protected List<OnlineCharacter> charList = new List<OnlineCharacter>();
 
@@ -65,11 +67,13 @@ public class CharacterSelector : Control
             CharacterMenuItem character = (CharacterMenuItem)menuItemScene.Instance();
             character.Name = item.Id.ToString();
             FindNode("char_list").AddChild(character);
+
             character.setCharacter(item);
             character.Connect("characterSelected", this, "onSelectChar");
         }
     }
 
+    private CharacterSelectView currentCharScene = null;
     public void onSelectChar(int charId)
     {
         GD.Print("selected " + charId);
@@ -94,6 +98,9 @@ public class CharacterSelector : Control
             charScene.Connect("onDeleteCharacter", this, "CharacterDeleteEvent");
             charScene.Connect("onEditCharacter", this, "CharacterEditEvent");
             charScene.Connect("onLaunchCharacter", this, "CharacterLaunch");
+
+            currentCharScene = charScene;
+
         }
     }
 
@@ -120,14 +127,46 @@ public class CharacterSelector : Control
 
     private void storeCharacter(int id, string body)
     {
-        //todo store character
+
+        if (currentCharScene != null)
+        {
+            var reciepe = JsonConvert.DeserializeObject<UMAReciepe>(body);
+            currentCharScene.loadSkin(reciepe);
+        }
+
+        var _char = charList.Where(df => df.Id == id).FirstOrDefault();
+        if (_char != null)
+        {
+            saveCharacterRequest(id, body);
+            _char.body = body;
+        }
+    }
+
+    private async void saveCharacterRequest(int id, string body)
+    {
+        try
+        {
+            var restClient = new RestClient.Net.Client(new RestClient.Net.NewtonsoftSerializationAdapter(), new Uri("http://" + hostname + ":" + (port + 1) + "/api/saveCharacter/" + id));
+            restClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + accessToken);
+
+            CharSaveReponse response = await restClient.PostAsync<CharSaveReponse, CharSaveMessage>(new CharSaveMessage { body = body });
+
+            if (response.success != true)
+            {
+                throw new Exception(response.errorMessage);
+            }
+        }
+        catch (Exception e)
+        {
+            await UIHelper.Helper.AcceptDialog("Something went wrong.", e.Message);
+        }
     }
 
     private async void deleteCharacterRequest(CharacterSelectView node, int id)
     {
         try
         {
-            var restClient = new RestClient.Net.Client(new RestClient.Net.NewtonsoftSerializationAdapter(), new Uri("http://" + hostname + ":" + (port+1 )+ "/api/deleteCharacter/" + id));
+            var restClient = new RestClient.Net.Client(new RestClient.Net.NewtonsoftSerializationAdapter(), new Uri("http://" + hostname + ":" + (port + 1) + "/api/deleteCharacter/" + id));
             restClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + accessToken);
 
             CharDeleteMessage response = await restClient.GetAsync<CharDeleteMessage>();
@@ -139,7 +178,7 @@ public class CharacterSelector : Control
                 {
                     charHolder.RemoveChild(node);
                 }
-                
+
                 charList.RemoveAll((tf) => tf.Id == id);
             }
             else
@@ -153,7 +192,7 @@ public class CharacterSelector : Control
         }
     }
 
-    public void CharacterEditEvent(int id)
+    public void CharacterEditEvent(int id, string body)
     {
         var _charNode = charHolder.GetNodeOrNull(id.ToString());
         if (_charNode != null)
@@ -162,7 +201,7 @@ public class CharacterSelector : Control
 
             charEditor.Visible = true;
             charEditor.characterId = _char.Id;
-            charEditor.loadJson(_char.body);
+            charEditor.loadJson(body);
         }
     }
 
@@ -170,7 +209,7 @@ public class CharacterSelector : Control
     {
         try
         {
-            var restClient = new RestClient.Net.Client(new RestClient.Net.NewtonsoftSerializationAdapter(), new Uri("http://" + hostname + ":" + (port+1) + "/api/characters"));
+            var restClient = new RestClient.Net.Client(new RestClient.Net.NewtonsoftSerializationAdapter(), new Uri("http://" + hostname + ":" + (port + 1) + "/api/characters"));
             restClient.DefaultRequestHeaders.Add("Authorization", "Bearer " + accessToken);
 
             CharReponseList response = await restClient.GetAsync<CharReponseList>();

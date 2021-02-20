@@ -18,7 +18,7 @@ public class CustomMeshTool : EditorPlugin
 
     public override bool Handles(Godot.Object @object)
     {
-        return @object != null && (@object is MeshInstance || @object is MeshLod || @object is Reference);
+        return @object != null && (@object is MeshInstance || @object is MeshLod);
     }
     public override void MakeVisible(bool visible)
     {
@@ -30,62 +30,7 @@ public class CustomMeshTool : EditorPlugin
     {
         selectionLodList.Clear();
         selectionList.Clear();
-        if (@object != null && @object is Reference)
-        {
-            bool allowView = false;
-            bool allowViewLod = false;
-            var selectedNodes = GetEditorInterface().GetSelection().GetSelectedNodes();
-            foreach (var child in selectedNodes)
-            {
-                if (child is MeshInstance)
-                {
-                    if (!((child as MeshInstance).GetParent() is MeshLod))
-                    {
-                        allowView = true;
-                        selectionList.Add(child as MeshInstance);
-                    }
-                }
-            }
-
-            if (allowView == false)
-            {
-                foreach (var child in selectedNodes)
-                {
-                    if (child is MeshLod)
-                    {
-                        allowViewLod = true;
-                        selectionLodList.Add(child as MeshLod);
-                    }
-                }
-            }
-
-            if (allowView)
-            {
-                editDock.Visible = true;
-
-                (editDock.GetNode("create_lod") as Button).Visible = true;
-                (editDock.GetNode("create_food_collision") as Button).Visible = false;
-                (editDock.GetNode("create_collision") as Button).Visible = false;
-                (editDock.GetNode("destroy_mesh") as Button).Visible = false;
-                (editDock.GetNode("redraw_mesh") as Button).Visible = false;
-            }
-            else if (allowViewLod)
-            {
-                editDock.Visible = true;
-
-                (editDock.GetNode("create_lod") as Button).Visible = false;
-                (editDock.GetNode("create_food_collision") as Button).Visible = false;
-                (editDock.GetNode("create_collision") as Button).Visible = false;
-                (editDock.GetNode("destroy_mesh") as Button).Visible = true;
-                (editDock.GetNode("redraw_mesh") as Button).Visible = true;
-
-            }
-            else
-            {
-                editDock.Visible = false;
-            }
-        }
-        else if (@object != null && @object is MeshInstance)
+        if (@object != null && @object is MeshInstance)
         {
             meshLod = null;
 
@@ -155,6 +100,14 @@ public class CustomMeshTool : EditorPlugin
         AddCustomType("MeshLod", "Spatial", script, texture);
     }
 
+
+    public override void _ExitTree()
+    {
+        RemoveCustomType("MeshLod");
+        RemoveControlFromContainer(CustomControlContainer.SpatialEditorSideLeft, editDock);
+
+        editDock.Free();
+    }
     public void createCollisionFootsteps()
     {
         if (meshLod != null)
@@ -342,12 +295,5 @@ public class CustomMeshTool : EditorPlugin
         return newMesh;
     }
 
-    public override void _ExitTree()
-    {
-        RemoveCustomType("MeshLod");
-        RemoveControlFromContainer(CustomControlContainer.SpatialEditorSideLeft, editDock);
-
-        editDock.Free();
-    }
 }
 #endif

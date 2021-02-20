@@ -15,6 +15,9 @@ public abstract class BackgroundLoaderBaseItem : Node
     {
         path = _path;
     }
+    public BackgroundLoaderBaseItem()
+    {
+    }
     public abstract void CallOnLoaderComplete();
     public abstract void CallOnLoaderUpdate(float progress);
     public abstract void CallOnLoaderError();

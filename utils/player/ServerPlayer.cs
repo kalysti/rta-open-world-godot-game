@@ -12,6 +12,12 @@ namespace Game
 
         public bool isInitalized = false;
 
+
+        public ServerVehicle vehicle = null;
+
+        public int vehicleId = -1;
+        
+
         public Queue<FrameSnapshot> snapshotQueue = new Queue<FrameSnapshot>();
 
         public override void _Ready()
@@ -31,13 +37,49 @@ namespace Game
         }
         public Vector3 velocity = Vector3.Zero;
 
+        [Remote]
+        public void requestStartStopEngine()
+        {
+            if (vehicle != null)
+                RpcId(networkId, "setVehicleEngine", vehicle.StartEngine());
+        }
+
+        [Remote]
+        public void requestVehicle(int _vehicleId)
+        {
+
+            if (vehicle != null)
+            {
+                disableVehicleMode(vehicle);
+
+                vehicle = null;
+                vehicleId = -1;
+
+                RpcId(networkId, "leaveVehicle");
+            }
+            else
+            {
+                var vehicleNode = (world as ServerWorld).spawner.GetNodeOrNull<WorldObjectNode>(_vehicleId.ToString());
+                if (vehicleNode == null)
+                    return;
+
+                vehicleId = _vehicleId;
+                vehicle = vehicleNode.holdedObject as ServerVehicle;
+                vehicle.driver = this;
+                shape.Disabled = true;
+                playerState.inVehicle = true;
+
+                RpcId(networkId, "enterVehicle", vehicleId);
+                vehicle.Rpc("PosUpdate", OS.GetTicksMsec(), vehicle.GetVehiclePosition(), vehicle.GetVehicleRotation());
+            }
+        }
+
+
         public override void _PhysicsProcess(float delta)
         {
-            if(!isInitalized)
+            if (!isInitalized)
                 return;
 
-            
-                
             FrameSnapshot sendSnapshot = null;
             int movesMade = 0;
 
@@ -47,13 +89,22 @@ namespace Game
 
                 if (lastSnapshot != null)
                 {
-                    lastSnapshot.movementState.velocity = velocity;
                     lastProccesTimestamp = lastSnapshot.timestamp;
 
-                    var newVelocity = CalculateVelocityByInput(lastSnapshot.movementState, delta);
-                    velocity = DoWalk(newVelocity);
+                    if (vehicle != null)
+                    {
+                        lastSnapshot.movementState.velocity = velocity;
+                        velocity = vehicle.Drive(lastSnapshot.movementState, delta);
+                        lastSnapshot.movementState.velocity = velocity;
 
-                    lastSnapshot.movementState.velocity = velocity;
+                    }
+                    else
+                    {
+                        lastSnapshot.movementState.velocity = velocity;
+                        velocity = DoWalk(CalculateVelocityByInput(lastSnapshot.movementState, delta));
+                        lastSnapshot.movementState.velocity = velocity;
+                    }
+
                     sendSnapshot = lastSnapshot;
                 }
 
@@ -62,20 +113,45 @@ namespace Game
 
             if (sendSnapshot != null)
             {
-                var newSnapshot = new FrameSnapshot();
 
-                newSnapshot.origin = GetPlayerPosition();
-                newSnapshot.rotation = GetPlayerRotation();
+                if (vehicle != null)
+                {
+                    var newSnapshot = new FrameVehicleSnapshot();
 
-                newSnapshot.timestamp = sendSnapshot.timestamp;
-                newSnapshot.serverTimestamp = OS.GetTicksMsec();
-                newSnapshot.movementState = sendSnapshot.movementState;
-                newSnapshot.movementState.velocity = sendSnapshot.movementState.velocity;
+                    newSnapshot.origin = vehicle.GetVehiclePosition();
+                    newSnapshot.rotation = vehicle.GetVehicleRotation();
+                    newSnapshot.timestamp = sendSnapshot.timestamp;
+                    newSnapshot.serverTimestamp = OS.GetTicksMsec();
+                    newSnapshot.movementState = sendSnapshot.movementState;
+                    newSnapshot.movementState.velocity = vehicle.LinearVelocity;
+                    newSnapshot.movementState.angular_velocity = vehicle.AngularVelocity;
+                    newSnapshot.movementState.brake = vehicle.Brake;
+                    newSnapshot.movementState.engineForce = vehicle.EngineForce;
+                    newSnapshot.movementState.steering = vehicle.Steering;
+                    newSnapshot.movementState.engineRpm = vehicle.engine_RPM;
+                    newSnapshot.movementState.currentGear = vehicle.getCurrentGear();
 
-                var newState = Networking.NetworkCompressor.Compress(newSnapshot);
-                RpcUnreliable("OnServerSnapshot", newState);
 
-                sendSnapshot = null;
+                    var newState = Networking.NetworkCompressor.Compress(newSnapshot);
+                    vehicle.RpcUnreliable("OnNewServerVehicleSnapshot", newState);
+
+                }
+                else
+                {
+                    var newSnapshot = new FrameSnapshot();
+
+                    newSnapshot.origin = GetPlayerPosition();
+                    newSnapshot.rotation = GetPlayerRotation();
+                    newSnapshot.timestamp = sendSnapshot.timestamp;
+                    newSnapshot.serverTimestamp = OS.GetTicksMsec();
+                    newSnapshot.movementState = sendSnapshot.movementState;
+                    newSnapshot.movementState.velocity = sendSnapshot.movementState.velocity;
+
+                    var newState = Networking.NetworkCompressor.Compress(newSnapshot);
+                    RpcUnreliable("OnServerSnapshot", newState);
+
+                    sendSnapshot = null;
+                }
             }
         }
 

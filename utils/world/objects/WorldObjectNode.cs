@@ -1,6 +1,8 @@
 using System;
 using Godot;
 using SQLite;
+using System.Linq;
+using System.Reflection;
 
 namespace Game
 {
@@ -21,6 +23,8 @@ namespace Game
 
         [Signal]
         public delegate void ObjectCreated();
+
+        public bool isServer = false;
 
 
 
@@ -90,6 +94,20 @@ namespace Game
             Scale = worldObject.GetScale();
         }
 
+        private void copyArgs(BaseVehicle _in, Node _out)
+        {
+            var properties = _in.GetPropertyList();
+
+            foreach (Godot.Collections.Dictionary prop in properties)
+            {
+                var type = (PropertyUsageFlags)prop["usage"];
+                if ((int)type == 8199) //key of exported vars
+                {
+                    _out.Set(prop["name"].ToString(), _in.Get(prop["name"].ToString()));
+                }
+            }
+        }
+
         public bool CreateScene(Resource res, bool setDefaultScale = false)
         {
             var scene = (PackedScene)res;
@@ -113,20 +131,39 @@ namespace Game
             }
             else if (worldObject.type == WorldObjectType.VEHICLE)
             {
-                var loadedScene = (Vehicle)scene.Instance();
-                loadedScene.Translation = Vector3.Zero;
-                loadedScene.Rotation = Vector3.Zero;
-                
-                if (!setDefaultScale)
-                    loadedScene.Scale = new Vector3(1, 1, 1);
+                Node baseScene = (BaseVehicle)scene.Instance();
+                BaseVehicle baseScene2 = (BaseVehicle)scene.Instance();
+                ulong objId = baseScene.GetInstanceId();
+
+                BaseVehicle vehicle = null;
+
+                if (isServer)
+                {
+                    baseScene.SetScript(GD.Load<Script>("res://utils/vehicle/ServerVehicle.cs"));
+                    vehicle = (ServerVehicle)GD.InstanceFromId(objId);
+                    copyArgs(baseScene2, vehicle);
+                    baseScene2.Dispose();
+                    baseScene2 = null;
+                }
                 else
                 {
-                    worldObject.SetScale(loadedScene.Scale);
-                    loadedScene.Scale = new Vector3(1, 1, 1);
+                    vehicle = (Vehicle)GD.InstanceFromId(objId);
+                }
+
+                vehicle.vehicleId = worldObject.Id;
+                vehicle.Translation = Vector3.Zero;
+                vehicle.Rotation = Vector3.Zero;
+
+                if (!setDefaultScale)
+                    vehicle.Scale = new Vector3(1, 1, 1);
+                else
+                {
+                    worldObject.SetScale(vehicle.Scale);
+                    vehicle.Scale = new Vector3(1, 1, 1);
                     Scale = worldObject.GetScale();
                 }
 
-                holdedObject = loadedScene;
+                holdedObject = vehicle;
 
                 CallDeferred("AddObjectToScene", holdedObject);
             }

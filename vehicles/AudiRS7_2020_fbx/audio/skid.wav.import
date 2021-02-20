@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/skid.wav-e8b7c3d3e9b7d74beae01450800b142d.sample"
+
+[deps]
+
+source_file="res://vehicles/AudiRS7_2020_fbx/audio/skid.wav"
+dest_files=[ "res://.import/skid.wav-e8b7c3d3e9b7d74beae01450800b142d.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0

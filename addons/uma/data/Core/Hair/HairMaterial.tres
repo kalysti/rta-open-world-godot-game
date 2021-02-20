@@ -1,0 +1,21 @@
+[gd_resource type="SpatialMaterial" load_steps=4 format=2]
+
+[ext_resource path="res://addons/uma/data/HumanFemale/Overlays/Hairs/LongHair/Textures/HAIR_D1.tga" type="Texture" id=1]
+[ext_resource path="res://addons/uma/data/HumanFemale/Overlays/Hairs/LongHair/Textures/Hair1_metallic.tga" type="Texture" id=2]
+[ext_resource path="res://addons/uma/data/HumanFemale/Overlays/Hairs/LongHair/Textures/Hair1_n.tga" type="Texture" id=3]
+
+[resource]
+resource_local_to_scene = true
+flags_transparent = true
+params_cull_mode = 2
+params_depth_draw_mode = 3
+params_grow = true
+params_grow_amount = 0.0
+albedo_color = Color( 0.14902, 0.14902, 0.14902, 1 )
+albedo_texture = ExtResource( 1 )
+metallic = 1.0
+metallic_texture = ExtResource( 2 )
+metallic_texture_channel = 4
+normal_enabled = true
+normal_scale = 0.0
+normal_texture = ExtResource( 3 )

@@ -48,92 +48,100 @@ public class BackgroundLoader : Node
     {
         while (loadingThreadRunning)
         {
-            if (currentLoader != null)
+            try
             {
-                var t = OS.GetTicksMsec();
-
-                while (OS.GetTicksMsec() < t + timeMax)
+                if (currentLoader != null)
                 {
-                    var p = currentLoader.loader.Poll();
+                    var t = OS.GetTicksMsec();
 
-                    if (p == Error.FileEof)
+                    while (OS.GetTicksMsec() < t + timeMax)
                     {
-                        var loadedResource = currentLoader.loader.GetResource(); ;
+                        var p = currentLoader.loader.Poll();
 
-                        currentLoader.resource = loadedResource;
-                        currentLoader.CallOnLoaderComplete();
-
-                        //remove same elements form queue, and call for same elements, loading finish
-                        if (loadingQueue.Count > 0)
+                        if (p == Error.FileEof)
                         {
-                            foreach (var q in loadingQueue.Where(tf => tf.path == currentLoader.path))
+                            var loadedResource = currentLoader.loader.GetResource(); ;
+
+                            currentLoader.resource = loadedResource;
+                            currentLoader.CallOnLoaderComplete();
+
+                            //remove same elements form queue, and call for same elements, loading finish
+                            if (loadingQueue.Count > 0)
                             {
-                                q.resource = loadedResource;
-                                q.CallOnLoaderComplete();
+                                foreach (var q in loadingQueue.Where(tf => tf.path == currentLoader.path))
+                                {
+                                    q.resource = loadedResource;
+                                    q.CallOnLoaderComplete();
+                                }
+
+                                loadingQueue = new Queue<BackgroundLoaderBaseItem>(loadingQueue.Where(tf => tf.path != currentLoader.path));
                             }
 
-                            loadingQueue = new Queue<BackgroundLoaderBaseItem>(loadingQueue.Where(tf => tf.path != currentLoader.path));
+                            currentLoader = null;
+
+                            break;
                         }
+                        else if (p == Error.Ok)
+                        {
+                            var progress = ((float)currentLoader.loader.GetStage()) / currentLoader.loader.GetStageCount();
+                            currentLoader.CallOnLoaderUpdate(progress);
 
-                        currentLoader = null;
+                            //call for all others the update
+                            if (loadingQueue.Count > 0)
+                            {
+                                foreach (var q in loadingQueue.Where(tf => tf.path == currentLoader.path))
+                                {
+                                    q.CallOnLoaderUpdate(progress);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            GD.Print("[Loader] Error ");
+                            currentLoader.CallOnLoaderError();
 
-                        break;
+                            //remove the same elements from queue and set error event
+                            if (loadingQueue.Count > 0)
+                            {
+                                foreach (var q in loadingQueue.Where(tf => tf.path == currentLoader.path))
+                                {
+                                    q.CallOnLoaderError();
+                                }
+
+                                loadingQueue = new Queue<BackgroundLoaderBaseItem>(loadingQueue.Where(tf => tf.path != currentLoader.path));
+                            }
+
+                            currentLoader = null;
+
+
+                            break;
+                        }
                     }
-                    else if (p == Error.Ok)
-                    {
-                        var progress = ((float)currentLoader.loader.GetStage()) / currentLoader.loader.GetStageCount();
-                        currentLoader.CallOnLoaderUpdate(progress);
 
-                        //call for all others the update
-                        if (loadingQueue.Count > 0)
-                        {
-                            foreach (var q in loadingQueue.Where(tf => tf.path == currentLoader.path))
-                            {
-                                q.CallOnLoaderUpdate(progress);
-                            }
-                        }
+                    /* check of all other elements in queue and set to finish */
+
+                }
+                else if (loadingQueue.Count > 0)
+                {
+                    var element = loadingQueue.Dequeue();
+
+                    try
+                    {
+                        currentLoader = element;
+                        currentLoader.loader = ResourceLoader.LoadInteractive(currentLoader.path);
                     }
-                    else
+                    catch
                     {
-                        GD.Print("[Loader] Error ");
-                        currentLoader.CallOnLoaderError();
-
-                        //remove the same elements from queue and set error event
-                        if (loadingQueue.Count > 0)
-                        {
-                            foreach (var q in loadingQueue.Where(tf => tf.path == currentLoader.path))
-                            {
-                                q.CallOnLoaderError();
-                            }
-
-                            loadingQueue = new Queue<BackgroundLoaderBaseItem>(loadingQueue.Where(tf => tf.path != currentLoader.path));
-                        }
-
                         currentLoader = null;
-
-
-                        break;
                     }
                 }
-
-                /* check of all other elements in queue and set to finish */
 
             }
-            else if (loadingQueue.Count > 0)
+            catch (Exception e)
             {
-                var element = loadingQueue.Dequeue();
-
-                try
-                {
-                    currentLoader = element;
-                    currentLoader.loader = ResourceLoader.LoadInteractive(currentLoader.path);
-                }
-                catch
-                {
-                    currentLoader = null;
-                }
+                GD.PrintErr("[BackgroundLoader] " + e.Message);
             }
-
+            
             System.Threading.Thread.Sleep(50);
         }
     }

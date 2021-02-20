@@ -19,6 +19,8 @@ namespace Game
 
         protected string accessToken = null;
 
+        protected int selectedCharId = 0;
+
         private int ownNetworkId = 0;
 
         public World gameWorld;
@@ -60,20 +62,19 @@ namespace Game
 
             AddChild(statsTimer);
             (GetNode("hud/menu/blur_bg") as Sprite).Visible = false;
-
-
         }
 
         public void doAutologin()
         {
             if (autoLogin)
             {
-                GD.Print("Do auto login");
                 accessToken = "VO4J72TZY8Y76DWKOE62PQJJPDPNB5Y3WNWAQJEE6I5GACVZMKNO47GPTN07NK546KYQSRD92THU8LMB";
+                selectedCharId = 6;
+                onLoginSuccess(accessToken);
                 ConnectToServer();
             }
         }
-        
+
         public override void _Process(float delta)
         {
             base._Process(delta);
@@ -105,6 +106,7 @@ namespace Game
                 }
             }
         }
+
         public void onLoginSuccess(string _token)
         {
             accessToken = _token;
@@ -118,6 +120,7 @@ namespace Game
 
         public void onSelectedChar(int charId)
         {
+            selectedCharId = charId;
             charSelector.Visible = false;
 
             //transmit selected char to server
@@ -230,7 +233,7 @@ namespace Game
         }
 
         [Puppet]
-        public void InitObjectList(string objectListJson)
+        public void InitCharacter(string objectListJson, string characterJson)
         {
             var objectList = Game.Networking.NetworkCompressor.Decompress<List<WorldObject>>(objectListJson);
 
@@ -247,17 +250,18 @@ namespace Game
                     System.Threading.Thread.Sleep(100);
                 }
 
-                CallDeferred("playerWorldProccesed");
+                CallDeferred("playerWorldProccesed", characterJson);
             });
 
             creationThread.Start();
         }
 
-        public void playerWorldProccesed()
+        public void playerWorldProccesed(string characterJson)
         {
-
             GD.Print("[Client] Game world is processed");
-            gameWorld.CreateLocalPlayer(ownNetworkId, spawnPoint, spawnRotation, inputEnabled);
+            GD.Print(characterJson);
+
+            gameWorld.CreateLocalPlayer(ownNetworkId, spawnPoint, spawnRotation, characterJson, inputEnabled);
             Input.SetMouseMode(Input.MouseMode.Captured);
             RpcId(1, "ActivatePlayer");
         }
@@ -302,7 +306,7 @@ namespace Game
         private void onPlayerWorldLoaded()
         {
             drawSystemMessage("Creating game world");
-            RpcId(1, "playerWorldLoaded");
+            RpcId(1, "playerWorldLoaded", selectedCharId);
         }
 
         [PuppetSync]

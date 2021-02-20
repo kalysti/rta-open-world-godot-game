@@ -17,7 +17,7 @@ namespace Game
         public System.Threading.Thread scanThread = null;
 
 
-        public Player player = null;
+        public NetworkPlayer player = null;
 
         public bool isObjectDatabaseSynced = false;
 

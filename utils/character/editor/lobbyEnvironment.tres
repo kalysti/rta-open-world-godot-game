@@ -10,3 +10,4 @@ background_mode = 2
 background_sky = SubResource( 1 )
 background_energy = 0.5
 fog_color = Color( 0.694118, 0.431373, 0.431373, 1 )
+tonemap_mode = 3

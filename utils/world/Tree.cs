@@ -21,7 +21,7 @@ public class Tree : Spatial
     // Called when the node enters the scene tree for the first time.
     public override void _Ready()
     {
-        if (!Engine.IsEditorHint())
+        if (!Engine.EditorHint)
         {
             area = new Area();
             AddChild(area);
@@ -88,9 +88,9 @@ public class Tree : Spatial
     {
         if (isEnabled != enable)
         {
-            GD.Print("Do something because changed to " +  enable);
+            GD.Print("Do something because changed to " + enable);
             isEnabled = enable;
-            shapeHelper(this, (enable == 1) ?  true : false);
+            shapeHelper(this, (enable == 1) ? true : false);
         }
     }
 }

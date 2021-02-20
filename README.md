@@ -5,8 +5,8 @@ A Godot game project written in c# to build the base functionality for role play
 ## In progress
 - Object downloader from the http backend server
 - Vehicle physics
-- Character creation and editor
 - Lua integration for custom scripts
+- Inventory system
 
 ## Current features
 - Client and server version in one project
@@ -17,6 +17,8 @@ A Godot game project written in c# to build the base functionality for role play
 - User registration and authenfication
 - Authoritative Server, with Lag Compensation, Client side Prediction/Server side Reconciliation and Entity Interpolation.
 - Editor road generator plugin 
+- Character creation and editor (Unity UMA Re-Implementation)
+- Auto-LOD functionality (3 lod levels)
 
 ### Map
 

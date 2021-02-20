@@ -14,6 +14,8 @@ namespace Game
         const float CAMERA_X_ROT_MIN = -80;
         const float CAMERA_X_ROT_MAX = 80;
 
+        [Export]
+        public float mouseSens = 12f;
 
         public bool inputEnabled = true;
 
@@ -97,19 +99,43 @@ namespace Game
             origCameraTransform = camera.Transform;
 
             fov_initial = camera.Fov;
-        }
 
+            (FindNode("vehicle_hud") as Control).Visible = false;
+
+            if (onlineCharacter != null)
+            {
+                var reciepe = JsonConvert.DeserializeObject<UMAReciepe>(onlineCharacter.body);
+
+                if (reciepe != null)
+                    character.initCharacter(reciepe.isMale, reciepe);
+            }
+        }
 
         public override void _PhysicsProcess(float delta)
         {
-            //in case of driving, dont do anything
-            if (playerState.inVehicle)
-            {
-                sendList.Clear();
-                inputQueue.Clear();
 
-                return;
+
+            if (Input.IsActionJustReleased("enter_menu") && Input.GetMouseMode() != Input.MouseMode.Visible)
+            {
+                requestEnterVehicle();
             }
+
+            if (Input.IsActionJustReleased("start_engine") && Input.GetMouseMode() != Input.MouseMode.Visible)
+            {
+                requestStartEngine();
+            }
+
+            if (Input.IsActionJustReleased("change_camera") && Input.GetMouseMode() != Input.MouseMode.Visible)
+            {
+                if (cameraMode == PlayerCameraMode.FIRST_PERSON)
+                    cameraMode = PlayerCameraMode.THIRD_PERSON;
+                else if (cameraMode == PlayerCameraMode.THIRD_PERSON)
+                    cameraMode = PlayerCameraMode.FIRST_PERSON;
+
+                setCameraMode();
+            }
+
+            (FindNode("vehicle_hud") as Control).Visible = playerState.inVehicle;
 
             //process input
             inputQueue.Enqueue(GetInput(delta));
@@ -120,6 +146,12 @@ namespace Game
 
                 if (newInput != null)
                 {
+                    if (playerState.inVehicle)
+                    {
+                        (FindNode("gear_label") as Label).Text = vehicle.getCurrentGear().ToString();
+                        (FindNode("speed_label") as Label).Text = vehicle.getKmPerHour().ToString() + " km/h";
+                    }
+
                     lastInput = ProcessInput(newInput, lastInput, delta);
                     character.ProcessAnimation(playerState, newInput, delta);
                 }
@@ -136,10 +168,20 @@ namespace Game
 
         private PlayerInput ProcessInput(PlayerInput newInput, PlayerInput oldInput, float delta)
         {
-            if (oldInput != null)
-                newInput.velocity = oldInput.velocity;
 
-            newInput.velocity = DoWalk(CalculateVelocityByInput(newInput, delta));
+            if (oldInput != null)
+            {
+                newInput.velocity = oldInput.velocity;
+            }
+
+            if (playerState.inVehicle)
+            {
+                //just save snapshot and send it to server, because server is calc the movement of the vehicle
+            }
+            else
+            {
+                newInput.velocity = DoWalk(CalculateVelocityByInput(newInput, delta));
+            }
 
             var snap = SaveSnapshot(newInput);
 
@@ -164,6 +206,7 @@ namespace Game
             var snapshot = new FrameSnapshot();
             snapshot.movementState = state;
             snapshot.timestamp = OS.GetTicksMsec();
+
             snapshot.origin = GetPlayerPosition();
             snapshot.rotation = GetPlayerRotation();
 
@@ -197,7 +240,9 @@ namespace Game
                 var orig1 = oldSnapshot.origin;
                 var orig2 = correctedSnapshot.origin;
 
+
                 //draw server side mesh
+
                 var td = (GetNode("server_side") as MeshInstance).GlobalTransform;
                 td.origin = correctedSnapshot.origin;
                 (GetNode("server_side") as MeshInstance).GlobalTransform = td;
@@ -210,14 +255,16 @@ namespace Game
                 if ((orig1 - orig2).Length() > InputPredictionMaxSize)
                 {
 
-                    GD.Print("[CLIENT] Pos correction for " + orig1 + " - " + orig2 + "  by " + (orig1 - orig2).Length());
-
                     inputQueue.Clear();
                     reProcess = true;
 
                     //roleback
+
+                    GD.Print("[CLIENT] Player  correction for " + orig1 + " - " + orig2 + "  by " + (orig1 - orig2).Length());
+
                     SetPlayerPosition(correctedSnapshot.origin);
                     SetPlayerRotation(correctedSnapshot.rotation);
+
 
                     lastInput = correctedSnapshot.movementState;
                     snapshotList.Reverse();
@@ -234,12 +281,14 @@ namespace Game
             }
             else if (snapshots.Count > 1)
             {
-                GD.Print("[Client] Desyncing");
-
                 snapshots.Clear();
+
+
+                GD.Print("[Client] Desyncing");
 
                 SetPlayerPosition(correctedSnapshot.origin);
                 SetPlayerRotation(correctedSnapshot.rotation);
+
 
                 lastInput = correctedSnapshot.movementState;
             }
@@ -253,12 +302,16 @@ namespace Game
 
             var movementInput = new PlayerInput();
 
-         
-
             movementInput.cam_direction = Vector3.Zero;
             movementInput.movement_direction = Vector2.Zero;
 
-            var cam_xform = camera.GlobalTransform;
+            var headBasis = camera.GlobalTransform.basis;
+
+
+            if (Input.IsActionJustReleased("editor") && Input.GetMouseMode() != Input.MouseMode.Visible)
+            {
+                objectEditor.Show();
+            }
 
             if (Input.IsActionPressed("move_forward") && Input.GetMouseMode() != Input.MouseMode.Visible)
                 movementInput.movement_direction.y += 1;
@@ -270,22 +323,13 @@ namespace Game
                 movementInput.movement_direction.x += 1;
 
 
-            if (Input.IsActionJustReleased("editor") && Input.GetMouseMode() != Input.MouseMode.Visible)
-            {
-                objectEditor.Show();
-            }
-
-            if (Input.IsActionJustReleased("enter_menu") && Input.GetMouseMode() != Input.MouseMode.Visible)
-            {
-                enterVehicle();
-            }
-
             movementInput.movement_direction = movementInput.movement_direction.Normalized();
 
-            movementInput.cam_direction += -cam_xform.basis.z * movementInput.movement_direction.y;
-            movementInput.cam_direction += cam_xform.basis.x * movementInput.movement_direction.x;
+            movementInput.cam_direction += -headBasis.z * movementInput.movement_direction.y;
+            movementInput.cam_direction += headBasis.x * movementInput.movement_direction.x;
 
-            movementInput.cam_direction.y = 0;
+            //movementInput.cam_direction.y = 0; //dont need on fps?
+
             movementInput.cam_direction = movementInput.cam_direction.Normalized();
 
             //sprint
@@ -362,57 +406,122 @@ namespace Game
 
             return movementInput;
         }
-        private void enterVehicle()
+
+        [Puppet]
+        private void enterVehicle(int vehicleId)
         {
-            if (!playerState.inVehicle)
+            var vehicleNode = (world as World).spawner.GetNodeOrNull<WorldObjectNode>(vehicleId.ToString());
+            if (vehicleNode != null)
             {
-                GD.Print("start enter vehicle");
-                if (rayDrag.IsColliding())
+                vehicle = vehicleNode.holdedObject as Vehicle;
+                shape.Disabled = true;
+                vehicle.driver = this;
+                playerState.inVehicle = true;
+                camera.ClipToBodies = false;
+
+                setCameraMode();
+            }
+        }
+
+
+        [Puppet]
+        private void leaveVehicle()
+        {
+            GD.Print("[Client] Leave vehicle ");
+
+            if (vehicle != null)
+            {
+                disableVehicleMode(vehicle);
+                vehicle = null;
+
+                camera.ClipToBodies = true;
+                setCameraMode();
+            }
+        }
+
+        [Puppet]
+        private void setVehicleEngine(bool engine)
+        {
+            if (vehicle != null)
+            {
+                GD.Print("[Client] Start vehicle engine");
+                vehicle.engineStarted = !engine;
+                vehicle.StartEngine();
+            }
+        }
+
+        private void requestStartEngine()
+        {
+            if (vehicle != null && playerState.inVehicle)
+                RpcId(1, "requestStartStopEngine");
+        }
+
+        private void requestEnterVehicle()
+        {
+            var vehicleId = -1;
+
+            rayDrag.AddException(world.getMapTerrain());
+
+            if (rayDrag.IsColliding())
+            {
+                if (rayDrag.GetCollider() != null && rayDrag.GetCollider() is Vehicle)
                 {
-                    if (rayDrag.GetCollider() != null && rayDrag.GetCollider() is Vehicle)
-                    {
-                        GD.Print("found vehicle");
-
-                        var orig = camera.Translation;
-                        //orig.z -= 0.5f;
-                        orig.z -= 2.9f;
-                        orig.x = -0.3f;
-
-                        camera.Translation = orig;
-                        vehicle = rayDrag.GetCollider() as Vehicle;
-                        //GetParent().RemoveChild(this);
-                        //vehicle.AddChild(this);
-
-                        shape.Disabled = true;
-                        vehicle.driver = this;
-
-
-                        playerState.inVehicle = true;
-                        camera.ClipToBodies = false;
-                    }
+                    var node = rayDrag.GetCollider() as Vehicle;
+                    vehicleId = node.vehicleId;
                 }
             }
-            else
+
+            rayDrag.RemoveException(world.getMapTerrain());
+            RpcId(1, "requestVehicle", vehicleId);
+        }
+
+        protected void setCameraMode()
+        {
+            var t = Vector3.Zero;
+            var cameraRotation = (cameraBase.FindNode("rotation") as Spatial);
+
+            cameraRotation.RotationDegrees = Vector3.Zero;
+            cameraBase.RotationDegrees = Vector3.Zero;
+
+            if (cameraMode == PlayerCameraMode.THIRD_PERSON)
             {
-                //level.GetNode("clients").AddChild(this);
+                if (playerState.inVehicle)
+                {
+                    t.x = -0.4f;
+                    t.y = 1.4f;
+                    t.z = -3f;
+                }
+                else
+                {
 
-                shape.Disabled = false;
-                camera.Transform = origCameraTransform;
+                    t.z = -0.6f;
+                    t.y = 0.7f;
+                }
+                camera.Translation = t;
+            }
+            else if (cameraMode == PlayerCameraMode.FIRST_PERSON)
+            {
+                if (playerState.inVehicle)
+                {
 
-                var gt = GlobalTransform;
-                gt.origin = (vehicle.GetNode("car").GetNode("points").GetNode("driver_outside") as Position3D).GlobalTransform.origin;
-                GlobalTransform = gt;
+                    t.z = 1.1f;
+                    t.y = 0.6f;
+                }
+                else
+                {
 
-                var rot = shape.Rotation;
-                rot.y = vehicle.Transform.basis.GetEuler().y;
-                rot.x = Mathf.Deg2Rad(-90f);
+                    t.z = 0.8f;
+                    t.y = 0.8f;
+                }
 
-                shape.Rotation = rot;
+                camera.Translation = t;
+            }
 
-                vehicle.driver = null;
-                vehicle = null;
-                playerState.inVehicle = false;
-                camera.ClipToBodies = true;
+            var showChar = (cameraMode == PlayerCameraMode.THIRD_PERSON);
+            var charnode = shape.GetNodeOrNull<NetworkPlayerChar>("char");
+            if (charnode != null)
+            {
+                charnode.Visible = showChar;
             }
         }
 
@@ -420,18 +529,40 @@ namespace Game
         {
             base._Input(@event);
 
+            var mouseSense = Mathf.Clamp(mouseSens, -50, 50) / 100;
+
             if (@event is InputEventMouseMotion && Input.GetMouseMode() == Input.MouseMode.Captured)
             {
                 var mot = @event as InputEventMouseMotion;
-                cameraBase.RotateY(-mot.Relative.x * CAMERA_ROTATION_SPEED);
-                cameraBase.Orthonormalize();
+                var cameraRotation = (cameraBase.FindNode("rotation") as Spatial);
 
-                camera_x_rot = Mathf.Clamp(camera_x_rot + mot.Relative.y * CAMERA_ROTATION_SPEED, Mathf.Deg2Rad(CAMERA_X_ROT_MIN), Mathf.Deg2Rad(CAMERA_X_ROT_MAX));
-                camera_y_rot = Mathf.Clamp(camera_y_rot + mot.Relative.x * CAMERA_ROTATION_SPEED, Mathf.Deg2Rad(CAMERA_X_ROT_MIN), Mathf.Deg2Rad(CAMERA_X_ROT_MAX));
-                var newRot = (cameraBase.FindNode("rotation") as Spatial).Rotation;
-                newRot.x = camera_x_rot;
+                if (cameraMode == PlayerCameraMode.THIRD_PERSON)
+                {
+                    cameraBase.RotateY(Mathf.Deg2Rad(-mot.Relative.x * mouseSense));
+                    cameraBase.Orthonormalize();
 
-                (cameraBase.FindNode("rotation") as Spatial).Rotation = newRot;
+                    camera_x_rot = Mathf.Clamp(camera_x_rot + Mathf.Deg2Rad(mot.Relative.y * mouseSense), Mathf.Deg2Rad(CAMERA_X_ROT_MIN), Mathf.Deg2Rad(CAMERA_X_ROT_MAX));
+
+                    var newRot = cameraRotation.Rotation;
+                    newRot.x = camera_x_rot;
+                    cameraRotation.Rotation = newRot;
+                }
+                else if (cameraMode == PlayerCameraMode.FIRST_PERSON)
+                {
+                    if (mot.Relative.Length() > 0)
+                    {
+                        var horizontal = -mot.Relative.x * (mouseSens / 100);
+                        var vertical = mot.Relative.y * (mouseSens / 100);
+
+                        cameraBase.RotateY(Mathf.Deg2Rad(horizontal));
+                        cameraRotation.RotateX(Mathf.Deg2Rad(vertical));
+
+                        var temp_rot = cameraRotation.RotationDegrees;
+                        temp_rot.x = Mathf.Clamp(temp_rot.x, -90, 90);
+                        cameraRotation.RotationDegrees = temp_rot;
+                    }
+                }
+
             }
         }
 

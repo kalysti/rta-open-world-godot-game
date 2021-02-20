@@ -16,6 +16,8 @@ namespace Game
 
         protected List<WorldObject> creationInProgress = new List<WorldObject>();
 
+        public bool isServer = false;
+
         public List<WorldObject> allObjects()
         {
             return tempObjects;
@@ -103,7 +105,8 @@ namespace Game
         {
             var scene = GD.Load<PackedScene>("res://utils/world/objects/WorldObjectNode.tscn");
             var node = (WorldObjectNode)scene.Instance();
-            
+            node.isServer = isServer;
+
             node.worldObject = worldObject;
             node.Visible = false;
             node.Name = worldObject.Id.ToString();

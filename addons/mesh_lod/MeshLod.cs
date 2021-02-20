@@ -34,7 +34,7 @@ public class MeshLod : Spatial
 
         if (lod1 != null)
         {
-            if (Engine.IsEditorHint())
+            if (Engine.EditorHint)
             {
                 lod1.Visible = true;
             }
@@ -176,7 +176,7 @@ public class MeshLod : Spatial
         var lod2 = GetNodeOrNull<MeshInstance>("lod2");
         var lod3 = GetNodeOrNull<MeshInstance>("lod3");
 
-        if (Engine.IsEditorHint() || !enableLoding)
+        if (Engine.EditorHint || !enableLoding)
         {
             disableLod();
         }

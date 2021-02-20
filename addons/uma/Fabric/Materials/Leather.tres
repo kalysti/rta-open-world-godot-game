@@ -1,0 +1,16 @@
+[gd_resource type="SpatialMaterial" load_steps=4 format=2]
+
+[ext_resource path="res://addons/uma/Fabric/Textures/Leather/Black_leather_01_1K_Normal.png" type="Texture" id=1]
+[ext_resource path="res://addons/uma/Fabric/Textures/Leather/Black_leather_01_1K_Roughness.png" type="Texture" id=2]
+[ext_resource path="res://addons/uma/Fabric/Textures/Leather/Black_leather_01_1K_Base_Color.png" type="Texture" id=3]
+
+[resource]
+albedo_texture = ExtResource( 3 )
+metallic = 1.0
+roughness_texture = ExtResource( 2 )
+roughness_texture_channel = 4
+normal_enabled = true
+normal_scale = 1.0
+normal_texture = ExtResource( 1 )
+uv1_scale = Vector3( 10, 10, 10 )
+uv1_triplanar = true

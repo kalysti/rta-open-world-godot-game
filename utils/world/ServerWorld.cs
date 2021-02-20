@@ -18,7 +18,6 @@ namespace Game
         public delegate void mapLoaded();
 
         public ObjectSpawnerServer spawner = null;
-        public BaseMap map;
 
         public override void _Ready()
         {

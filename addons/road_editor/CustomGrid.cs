@@ -84,6 +84,19 @@ public class CustomGrid : EditorPlugin
         AddCustomType("RoadConnectorSide", "Spatial", connectorSideScript, texture_side);
         AddCustomType("RoadConnector", "Spatial", roadConnectorScript, texture_connector);
     }
+       public override void _ExitTree()
+    {
+        RemoveCustomType("RoadGrid");
+        RemoveCustomType("RoadConnector");
+        RemoveCustomType("RoadConnectorPort");
+        RemoveCustomType("RoadConnectorSide");
+
+        RemoveControlFromContainer(CustomControlContainer.SpatialEditorSideLeft, dock);
+        RemoveControlFromContainer(CustomControlContainer.SpatialEditorSideLeft, editDock);
+
+        dock.Free();
+        editDock.Free();
+    }
 
     private void initConnector()
     {
@@ -588,18 +601,6 @@ public class CustomGrid : EditorPlugin
         t.Scale = new Vector3(0.25f, 0.25f, 0.25f);
     }
 
-    public override void _ExitTree()
-    {
-        RemoveCustomType("RoadGrid");
-        RemoveCustomType("RoadConnector");
-        RemoveCustomType("RoadConnectorPort");
-        RemoveCustomType("RoadConnectorSide");
-
-        RemoveControlFromContainer(CustomControlContainer.SpatialEditorSideLeft, dock);
-        RemoveControlFromContainer(CustomControlContainer.SpatialEditorSideLeft, editDock);
-
-        dock.Free();
-        editDock.Free();
-    }
+ 
 }
 #endif

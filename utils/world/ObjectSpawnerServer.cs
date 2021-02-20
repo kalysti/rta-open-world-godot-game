@@ -32,6 +32,8 @@ namespace Game
 
         public void Init(BaseMap map)
         {
+            isServer = true;
+            
             if (Server.database != null)
             {
                 if (refreshDatabase)

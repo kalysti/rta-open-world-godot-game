@@ -41,7 +41,6 @@ _global_script_class_icons={
 config/name="Economics"
 config/description="Do everything everywhere"
 run/main_scene="res://utils/loader/Loader.tscn"
-run/low_processor_mode=true
 boot_splash/image="res://logo.png"
 boot_splash/fullsize=false
 boot_splash/bg_color=Color( 0.105882, 0.105882, 0.105882, 1 )
@@ -53,10 +52,13 @@ enable_audio_input=true
 
 [autoload]
 
-CharEditGlobal="*res://utils/character/CharEditGlobal.cs"
 UserSettings="*res://utils/client/Settings/UserSettings.cs"
 BackgroundLoader="*res://utils/loader/BackgroundLoader.cs"
 HTerrainThreadFix="*res://fixes/HTerrainThreadFix.gd"
+
+[debug]
+
+settings/fps/force_fps=60
 
 [display]
 
@@ -65,9 +67,13 @@ window/size/height=720
 window/dpi/allow_hidpi=true
 window/vsync/use_vsync=false
 
+[editor]
+
+search_in_file_extensions=PoolStringArray( "gd", "shader", "cs", "pose", "reciepe" )
+
 [editor_plugins]
 
-enabled=PoolStringArray( "SIsilicon.3d.text", "footsteps", "godot_game_tools", "mesh_lod", "road_editor", "vegetation_spawner", "zylann.hterrain" )
+enabled=PoolStringArray( "SIsilicon.3d.text", "footsteps", "mesh_lod", "uma", "zylann.hterrain" )
 
 [gdnative]
 
@@ -149,6 +155,11 @@ editor={
 "events": [ Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"pressed":false,"scancode":16777245,"unicode":0,"echo":false,"script":null)
  ]
 }
+change_camera={
+"deadzone": 0.5,
+"events": [ Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"pressed":false,"scancode":80,"unicode":0,"echo":false,"script":null)
+ ]
+}
 
 [logging]
 
@@ -157,6 +168,9 @@ file_logging/enable_file_logging=true
 [mono]
 
 profiler/enabled=true
+export/include_scripts_content=true
+export/aot/enabled=true
+export/aot/full_aot=true
 
 [physics]
 
@@ -168,6 +182,7 @@ threads/thread_model=2
 quality/filters/anisotropic_filter_level=2
 quality/filters/use_nearest_mipmap_filter=true
 quality/filters/msaa=2
+quality/filters/use_fxaa=true
 quality/godrays/sample_number=200
 quality/godrays/use_pcf5=true
 quality/godrays/dither_amount=1.0

@@ -104,6 +104,32 @@ namespace Game.Rest
 
         }
 
+        [Route(EmbedIO.HttpVerbs.Post, "/saveCharacter/{id?}")]
+        public async Task<CharSaveReponse> SaveCharacter(int id)
+        {
+            var user = GetUser();
+            var data = await HttpContext.GetRequestDataAsync<CharSaveMessage>();
+            try
+            {
+                var _char = Server.database.Table<OnlineCharacter>().Where(s => s.AuthId == user.Id && s.Id == id).FirstOrDefault();
+                if (_char == null)
+                {
+                    throw new Exception("Cant found character for given user.");
+                }
+
+                _char.body = data.body;
+
+                Server.database.Update(_char);
+                return new CharSaveReponse { success = true, errorMessage = null };
+
+            }
+            catch (Exception e)
+            {
+                return new CharSaveReponse { success = false, errorMessage = e.Message };
+            }
+        }
+
+
         [Route(EmbedIO.HttpVerbs.Post, "/createCharacter")]
         public async Task<CharCreatedMessage> CreteCharacter()
         {

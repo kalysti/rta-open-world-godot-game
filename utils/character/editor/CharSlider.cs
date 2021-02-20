@@ -1,23 +1,28 @@
+
 using Godot;
 using System;
 using Game;
 
-public class CharSlider : Label
+public class CharSlider : VBoxContainer
 {
-    public Color[] vertex_groups = null;
 
     [Signal]
     public delegate void change_morph(string text, float value);
-    
+
+    public string sliderName = "";
 
     public void SetSlider(double value)
     {
         (GetNode("HSlider") as Slider).Value = value;
     }
+    public void SetText(string value)
+    {
+        (GetNode("Label") as Label).Text = value;
+    }
 
     private void _on_HSlider_value_changed(float value)
     {
-        EmitSignal(nameof(change_morph), Text, value);
+        EmitSignal(nameof(change_morph), sliderName, value);
     }
 
     /*

@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/spring_3.wav-2746c53bbf47e16b8a872c9d4da47a22.sample"
+
+[deps]
+
+source_file="res://vehicles/AudiRS7_2020_fbx/audio/spring_3.wav"
+dest_files=[ "res://.import/spring_3.wav-2746c53bbf47e16b8a872c9d4da47a22.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0

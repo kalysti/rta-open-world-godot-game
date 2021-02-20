@@ -1,5 +1,7 @@
 using Godot;
 using System;
+using Newtonsoft.Json;
+
 namespace Game
 {
     public class CharacterSelectView : Panel
@@ -11,19 +13,11 @@ namespace Game
 
 
         [Signal]
-        public delegate void onEditCharacter(int id);
+        public delegate void onEditCharacter(int id, string body);
 
 
         [Signal]
         public delegate void onLaunchCharacter(int id);
-
-        public override void _Process(float delta)
-        {
-            return;
-            var node = GetNodeOrNull("viewport_container/char_viewport/char");
-            if (node != null)
-                (node as NetworkPlayerChar).doCatwalk();
-        }
 
         public void SetCharacter(OnlineCharacter _tempChar)
         {
@@ -38,6 +32,19 @@ namespace Game
             (FindNode("edit_button") as Button).Connect("pressed", this, "onCharacterEdit");
             (FindNode("launch_button") as Button).Connect("pressed", this, "onCharacterLaunch");
             (FindNode("delete_button") as Button).Connect("pressed", this, "onCharacterDelete");
+
+            if (String.IsNullOrEmpty(_tempChar.body))
+            {
+                GetNode<NetworkPlayerChar>("viewport_container/char_viewport/char").initCharacter(_tempChar.isMale);
+                GetNode<NetworkPlayerChar>("viewport_container/char_viewport/char").doCatwalk();
+            }
+            else
+            {
+                var reciepe = JsonConvert.DeserializeObject<UMAReciepe>(_tempChar.body);
+                GetNode<NetworkPlayerChar>("viewport_container/char_viewport/char").initCharacter(reciepe.isMale, reciepe);
+                GetNode<NetworkPlayerChar>("viewport_container/char_viewport/char").doCatwalk();
+            }
+
         }
 
         public void onCharacterDelete()
@@ -54,7 +61,14 @@ namespace Game
 
         public void onCharacterEdit()
         {
-            EmitSignal(nameof(onEditCharacter), character.Id);
+            EmitSignal(nameof(onEditCharacter), character.Id, character.body);
+        }
+
+        public void loadSkin(UMAReciepe reciepe)
+        {
+            GetNode<NetworkPlayerChar>("viewport_container/char_viewport/char").skeleton.loadReciepe(reciepe);
+            GetNode<NetworkPlayerChar>("viewport_container/char_viewport/char").skeleton.generateDNA(reciepe.dna);
+            GetNode<NetworkPlayerChar>("viewport_container/char_viewport/char").doCatwalk();
         }
     }
 }

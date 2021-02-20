@@ -37,7 +37,7 @@ public class RoadConnectorPort : ImmediateGeometry
     }
     public override void _Ready()
     {
-        if (Engine.IsEditorHint())
+        if (Engine.EditorHint)
         {
             SetMaterial();
         }
@@ -47,7 +47,7 @@ public class RoadConnectorPort : ImmediateGeometry
 
     private void SetMaterial()
     {
-        if (Engine.IsEditorHint())
+        if (Engine.EditorHint)
         {
             if (test)
                 MaterialOverride = GD.Load<SpatialMaterial>("res://addons/road_editor/up.material");

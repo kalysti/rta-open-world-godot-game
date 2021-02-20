@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/collision.wav-1d4b7486ba6683dea46c6470eeebf087.sample"
+
+[deps]
+
+source_file="res://vehicles/AudiRS7_2020_fbx/audio/collision.wav"
+dest_files=[ "res://.import/collision.wav-1d4b7486ba6683dea46c6470eeebf087.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0

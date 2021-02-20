@@ -15,14 +15,17 @@ public class ViewportCloud : Viewport
 
     public override void _Ready()
     {
-        environment = GetNode(envPath) as WorldEnvironment;
+        environment = GetNodeOrNull<WorldEnvironment>(envPath);
+
         sky = GetNode("Sprite") as SpriteSky;
+
+        if(environment != null)
         (environment.Environment.BackgroundSky as PanoramaSky).Panorama = GetTexture();
     }
     public override void _Process(float delta)
     {
         //fix a bug with viewport after late init
-        if (sky.nodeInit && !nodeInit)
+        if (sky.nodeInit && !nodeInit && environment != null)
         {
             (environment.Environment.BackgroundSky as PanoramaSky).Panorama = GetTexture();
             nodeInit = true;

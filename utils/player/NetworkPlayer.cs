@@ -7,7 +7,7 @@ namespace Game
     {
         public NetworkPlayerState playerState = new NetworkPlayerState();
         public PlayerFootsteps footstepSystem = null;
-        public World world = null;
+        public BaseWorld world = null;
         protected const float JUMP_POWER = 15.0f;
         protected const float JUMP_DURATION = 1f;
         protected const float AIR_SPEED = 6.0f;
@@ -46,12 +46,19 @@ namespace Game
         [Export]
         public NodePath shapePath;
 
+        public OnlineCharacter onlineCharacter = null;
+
+
         [Export]
         public NodePath footstepSystemPath;
         private Timer jumpTimer = new Timer();
         private Timer pingTimer = new Timer();
 
+        protected PlayerCameraMode cameraMode = PlayerCameraMode.THIRD_PERSON;
+
         public Vector3 currentVelocity = Vector3.Zero;
+
+        public bool characterCreated = false;
 
         public void InitPlayer()
         {
@@ -85,6 +92,11 @@ namespace Game
                 pingTimer.Autostart = true;
             }
 
+        }
+
+        public virtual void setCharacter(OnlineCharacter _char)
+        {
+            onlineCharacter = _char;
         }
 
         public void onJumpTimerTimeout()
@@ -131,6 +143,7 @@ namespace Game
             networkStats.pingMs = ping;
         }
 
+
         [Remote]
         public void ReceivePingPackage(uint time)
         {
@@ -138,6 +151,27 @@ namespace Game
             networkStats.pingMs = OS.GetTicksMsec() - time;
 
             RpcUnreliableId(id, "IncomingServerPing", networkStats.pingMs);
+        }
+
+        public void disableVehicleMode(BaseVehicle vehicle)
+        {
+
+            var gt = GlobalTransform;
+            gt.origin = (vehicle.GetNode("points").GetNode("driver_outside") as GeometryInstance).GlobalTransform.origin;
+            Rotation = Vector3.Zero;
+            GlobalTransform = gt;
+
+            var rot = shape.Rotation;
+            rot.y = vehicle.Transform.basis.GetEuler().y;
+            rot.x = 0;
+
+            shape.Rotation = rot;
+            shape.Disabled = false;
+
+            playerState.inVehicle = false;
+
+            vehicle.driver = null;
+            vehicle.engineStarted = false;
         }
 
         public void GetPings()
@@ -172,6 +206,7 @@ namespace Game
             movementState.velocity.y -= GRAVITY * delta;
 
             var target = movementState.cam_direction;
+
             if (movementState.isSprinting)
                 target *= MAX_SPRINT_SPEED;
             else
@@ -218,13 +253,18 @@ namespace Game
             }
 
             //face moving dir
-            doCameraRotation(movementState, delta);
+            doCharRotation(movementState, delta);
 
             return movementState.velocity;
         }
 
-        private void doCameraRotation(PlayerInput movementState, float delta)
+        private void doCharRotation(PlayerInput movementState, float delta)
         {
+            if (playerState.inVehicle)
+            {
+                return;
+            }
+
             if ((movementState.cam_direction).Dot(movementState.velocity) > 0)
             {
                 var quat_from = new Quat(shape_orientation.basis);
@@ -236,6 +276,7 @@ namespace Game
                 srp.y = shape_orientation.basis.GetEuler().y;
                 shape.Rotation = srp;
             }
+
         }
     }
 }

@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using Game;
+using Newtonsoft.Json;
 
 namespace Game
 {
@@ -15,27 +16,16 @@ namespace Game
         public NodePath objectSpawnerPath;
         public ObjectSpawner spawner = null;
 
-        public Player player = null;
-
         [Export]
         public string mapScenePath = "res://maps/TestMapDev.tscn"; // res://maps/TestMap.tscn
 
-
-        [Export]
-        public NodePath mapPath;
-
-        public BaseMap map = null;
-
-        public Image baseMapImage = null;
 
         // Called when the node enters the scene tree for the first time.
         public override void _Ready()
         {
             base._Ready();
-
             spawner = (ObjectSpawner)GetNode(objectSpawnerPath);
         }
-
 
         public void LoadMap()
         {
@@ -59,19 +49,28 @@ namespace Game
 
         public void MapLoaded()
         {
+            loadMapImage();
             EmitSignal(nameof(onMapLoadComplete));
         }
 
-        public void CreateLocalPlayer(int id, Vector3 spawnPoint, Vector3 spawnRot, bool inputEnabled = true)
+        public void CreateLocalPlayer(int id, Vector3 spawnPoint, Vector3 spawnRot, string characterJson, bool inputEnabled = true)
         {
             GD.Print("[Client] Create player at " + spawnPoint);
             var playerScene = (PackedScene)ResourceLoader.Load("res://utils/player/Player.tscn");
-            player = (Player)playerScene.Instance();
+            var p = (Player)playerScene.Instance();
+            p.inputEnabled = inputEnabled;
+            player = p;
             player.Name = id.ToString();
-            player.inputEnabled = inputEnabled;
             player.world = this;
 
+            var character = JsonConvert.DeserializeObject<OnlineCharacter>(characterJson);
+            if (character == null)
+                return;
+
+            player.setCharacter(character);
+
             GetNode("players").AddChild(player);
+
 
             player.SetPlayerPosition(spawnPoint);
             player.SetPlayerRotation(spawnRot);
@@ -87,46 +86,6 @@ namespace Game
         {
             (GetNode("WorldEnvironment") as WorldEnvironment).Environment.SsaoEnabled = ssao_on;
         }
-        public Spatial getMapTerrain()
-        {
-            if (map != null && map.terrain != null)
-                return map.terrain;
-            else
-                return null;
-        }
-
-        public Vector3 getMapImagePosition()
-        {
-            if (map.terrain == null)
-                return Vector3.Zero;
-
-            var scale = (Vector3)map.terrain.Get("map_scale");
-
-            return player.GetPlayerPosition() / scale;
-        }
-
-        public Color getMapColorByPosition(float x, float z)
-        {
-            if (baseMapImage != null)
-            {
-                baseMapImage.Lock();
-                var color = baseMapImage.GetPixel((int)x, (int)z);
-                baseMapImage.Unlock();
-
-                return color;
-            }
-            else
-                return new Color(0, 0, 0);
-        }
-
-        private void loadMapImage()
-        {
-            var data = map.terrain.Get("_data") as Resource;
-            var tf = (AABB)data.Call("get_aabb");
-            var texture = (StreamTexture)data.Call("get_texture", 5);
-            baseMapImage = texture.GetData();
-        }
-
 
         public void CreatePuppet(int networkId, uint timestamp, Vector3 pos, Vector3 rot, bool inputEnabled = true)
         {

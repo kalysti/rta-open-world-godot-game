@@ -7,12 +7,12 @@ namespace Game
     public class PlayerFootsteps : Spatial
     {
         const string path = "res://audio/character/footsteps";
+
         private bool isStepLeft = false;
         private float next_step = 0.0f;
 
         [Export]
         public float stepDelay = 0.5f;
-
 
         [Export]
         public float maxIncreaseVolume = 1.0f;
@@ -34,7 +34,6 @@ namespace Game
 
         public override void _Process(float delta)
         {
-            return;
             if (player == null)
                 return;
 
@@ -54,7 +53,7 @@ namespace Game
         }
         public override void _PhysicsProcess(float delta)
         {
-            
+
             if (next_step <= 0.0)
                 playStep();
         }
@@ -109,7 +108,7 @@ namespace Game
             else
                 return null;
         }
-  
+
         public void playStep()
         {
             string material = null;
@@ -130,7 +129,7 @@ namespace Game
 
             var colliderObject = player.rayGround.GetCollider();
 
-            if (player.world.getMapTerrain() == colliderObject && player.world.baseMapImage != null)
+            if (player.world != null && player.world.baseMapImage != null && player.world.getMapTerrain() == colliderObject)
             {
                 material = translateTerrain();
             }

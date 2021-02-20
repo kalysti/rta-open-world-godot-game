@@ -32,11 +32,10 @@ namespace Game.Loader
             {
                 GD.Print("Debug version");
             }
-
-            ProjectSettings.LoadResourcePack("res://assets.pck");
-
-            //Loading shapes.dat
-            CharEditGlobal.LoadShapes();
+            else
+            {
+                ProjectSettings.LoadResourcePack("res://assets.pck");
+            }
 
             if (Core.isDebug)
                 Core.isClientAndServer = true;
@@ -93,7 +92,7 @@ namespace Game.Loader
             {
                 server = (Server)scene.Instance();
                 server.Name = "server";
-                server.Connect("onServerIsReady", client, "doAutologin");
+                // server.Connect("onServerIsReady", client, "doAutologin");
                 GetNode("vbox/vbox_server/server_viewport").AddChild(server);
             }
         }
