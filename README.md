@@ -1,4 +1,4 @@
-# Economics - A third person role play game
+# Economics - A third person open world role play game
 
 A Godot game project written in c# to build the base functionality for role play games and modders
 
