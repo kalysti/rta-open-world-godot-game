@@ -9,6 +9,8 @@ A Godot game project written in c# to build the base functionality for role play
 - Inventory system
 
 ## Current features
+- Full animated and customizable characters with skin system
+
 - Client and server version in one project
 - Object spawner / placer
 - Writen in C# (No gd scripts in usage)
