@@ -1,4 +1,4 @@
-# Economics - A third person open world role play game
+# RTA - A third person open world role play game
 
 A Godot game project written in c# to build the base functionality for role play games and modders
 
@@ -7,6 +7,11 @@ A Godot game project written in c# to build the base functionality for role play
 - Vehicle physics
 - Lua integration for custom scripts
 - Inventory system
+- Property system
+- Geodata (road and terrain) based on openstreetmap datas
+- Weather and daynight system
+- Estate system
+- many more
 
 ## Current features
 - Full animated and customizable characters with skin system
